@@ -57,12 +57,12 @@ class ConfigParser {
 //    def params: Seq[String]
   }
 
+
+
   case class Directive(name: String)
   case class Size(name: String, width: Int, height: Int) extends Command
   case class IntCommand(name: String, value: Int)
   case class Color(name: String, r: Float, g: Float, b: Float)
-
-
 
   def parse(filename: String) = parse(Source.fromFile(filename))
 
