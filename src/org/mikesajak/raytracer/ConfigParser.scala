@@ -1,3 +1,5 @@
+package org.mikesajak.raytracer
+
 import scala.io.Source
 
 /**

@@ -31,6 +31,13 @@ object Transform {
                   0,    0,   0,   0)
 
   def lookAt(eye: Vector4, at: Vector4, up: Vector4) = {
-    // todo
+    val w = new Vector4(eye).normalize()
+    val u = (new Vector4(up) cross w).normalize()
+    val v = new Vector4(w).normalize()
+
+    Matrix44(u.x, u.y, u.z, eye*u,
+             v.x, v.y, v.z, eye*v,
+             w.x, w.y, w.z, eye*w,
+               0,   0,   0,     1)
   }
 }

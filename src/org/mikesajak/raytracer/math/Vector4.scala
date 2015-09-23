@@ -54,13 +54,6 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
   def zero() = fill(0)
   def ones() = fill(1)
 
-  def dot(v: Vector4) = x*v.x + y*v.y + z*v.z + w*v.w
-  def cross(v: Vector4) =
-    set(y*v.z - z*v.y,
-        z*v.x - x*v.z,
-        x*v.y - y*v.z,
-        0)
-
   def length = d
   def d2 = this dot (this)
   def d = scala.math.sqrt(d2).toFloat
@@ -102,6 +95,15 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
         data(0)*m(3)(0) + data(1)*m(3)(1) + data(2)*m(3)(2) + data(3)*m(3)(3))
 
   def *(m: Matrix44) = new Vector4(this) *= m
+
+  def dot(v: Vector4) = x*v.x + y*v.y + z*v.z + w*v.w
+  def *(v: Vector4) = this dot v
+
+  def cross(v: Vector4) =
+    set(y*v.z - z*v.y,
+        z*v.x - x*v.z,
+        x*v.y - y*v.z,
+        0)
 }
 
 object Vector4 {
@@ -109,4 +111,6 @@ object Vector4 {
   def apply(x: Float, y: Float, z: Float, w: Float = 0) = new Vector4(x,y,z,w)
 
   def normalize(v: Vector4) = v * (1.0f / v.length)
+
+  def cross(v1: Vector4, v2: Vector4) = new Vector4(v1).cross(v2)
 }
