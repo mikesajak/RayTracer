@@ -18,19 +18,20 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
 
   def this(c0: Vector4, c1: Vector4, c2: Vector4, c3: Vector4) =
     this(c0.x, c0.y, c0.z, c0.w,
-      c1.x, c1.y, c1.z, c1.w,
-      c2.x, c2.y, c2.z, c2.w,
-      c3.x, c3.y, c3.z, c3.w)
+         c1.x, c1.y, c1.z, c1.w,
+         c2.x, c2.y, c2.z, c2.w,
+         c3.x, c3.y, c3.z, c3.w)
 
 
   def this(m: Matrix44) = this(m.data(0), m.data(1), m.data(2), m.data(3))
 
   def this() = this(1,0,0,0,
-    0,1,0,0,
-    0,0,1,0,
-    0,0,0,1)
+                   0,1,0,0,
+                   0,0,1,0,
+                   0,0,0,1)
 
   def apply(idx: Int) = data(idx)
+  def update(idx: Int, col: Vector4) = data(idx) := col
 
   def set(a00: Float, a01: Float, a02: Float, a03: Float,
           a10: Float, a11: Float, a12: Float, a13: Float,
@@ -45,9 +46,9 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
 
   def set(c0: Vector4, c1: Vector4, c2: Vector4, c3: Vector4) =
     set(c0.x, c0.y, c0.z, c0.w,
-      c1.x, c1.y, c1.z, c1.w,
-      c2.x, c2.y, c2.z, c2.w,
-      c3.x, c3.y, c3.z, c3.w)
+        c1.x, c1.y, c1.z, c1.w,
+        c2.x, c2.y, c2.z, c2.w,
+        c3.x, c3.y, c3.z, c3.w)
 
   def set(m: Matrix44) = set(m.data(0), m.data(1), m.data(2), m.data(3))
 
@@ -55,9 +56,9 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
   def :=(t: Tuple4[Vector4, Vector4, Vector4, Vector4]) = set(t._1, t._2, t._3, t._4)
   def :=(t: Tuple16[Float, Float, Float, Float,  Float, Float, Float, Float,  Float, Float, Float, Float,  Float, Float, Float, Float]) =
     set(t._1,  t._2,   t._3,  t._4,
-      t._5,  t._6,   t._7,  t._8,
-      t._9,  t._10,  t._11, t._12,
-      t._13, t._14,  t._15, t._16)
+        t._5,  t._6,   t._7,  t._8,
+        t._9,  t._10,  t._11, t._12,
+        t._13, t._14,  t._15, t._16)
 
   def fill(a: Float) = {
     data(0).fill(a)
@@ -113,6 +114,11 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
 object Matrix44 {
   def apply() = new Matrix44()
 
+  def apply(a: Float) = new Matrix44(a,a,a,a,
+                                      a,a,a,a,
+                                      a,a,a,a,
+                                      a,a,a,a)
+
   def apply(a00: Float, a01: Float, a02: Float, a03: Float,
             a10: Float, a11: Float, a12: Float, a13: Float,
             a20: Float, a21: Float, a22: Float, a23: Float,
@@ -127,6 +133,16 @@ object Matrix44 {
                  c0.y, c1.y, c2.y, c3.y,
                  c0.z, c1.z, c2.z, c3.z,
                  c0.w, c1.w, c2.w, c3.w)
+
+  def mul(m1: Matrix44, m2: Matrix44) = {
+    val r = Matrix44(0)
+    for (i <- 0 until 4;
+         j <- 0 until 4;
+         k <- 0 until 4) {
+      r(i)(j) = m1(i)(j) * m2(i)(k)
+    }
+    r
+  }
 
   def outerProd(v1: Vector4, v2: Vector4) =
       Matrix44(v1.x*v2.x, v1.x*v2.y, v1.x*v2.z, v1.x*v2.w,

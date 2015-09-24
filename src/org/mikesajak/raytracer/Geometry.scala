@@ -43,7 +43,28 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
 
 case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
   def normal = ((p2 - p1) cross (p3 - p1)).normalize()
-  override def intersect(ray: Ray): Option[Intersection] = ??? // TODO
+  override def intersect(ray: Ray): Option[Intersection] = {
+    val n = normal
+    val rayAngleCos = ray.dir * n
+    if (rayAngleCos > 0) {
+      // plane: P*n - A*n = 0
+      // ray = P = P0 + P1*t
+      val tPlane = (p1 * n - ray.origin * n) / (ray.dir * n)
+      val pPlane = ray.point(tPlane)
+    }
+    else None
+  }
+}
+
+case class IndexedTriangle(vertices: Seq[Vector4], i1: Int, i2: Int, i3: Int) extends Geometry {
+  def p1 = vertices(i1)
+  def p2 = vertices(i2)
+  def p3 = vertices(i3)
+
+  def normal = ((p2 - p1) cross (p3 - p1)).normalize()
+  override def intersect(ray: Ray): Option[Intersection] = {
+    if
+  }
 }
 
 case class Mesh(triangles: Seq[Triangle]) extends Geometry {

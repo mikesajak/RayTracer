@@ -23,6 +23,7 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
   def w_=(w1: Float) = data(3) = w1
 
   def apply(idx: Int) = data(idx)
+  def update(idx: Int, a: Float) = data(idx) = a
 
   def set(x0: Float, y0: Float, z0: Float, w0: Float) = {
     data(0) = x0
