@@ -1,5 +1,8 @@
 package org.mikesajak.raytracer
 
+import org.mikesajak.raytracer.math.Vector4
+
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
@@ -53,6 +56,7 @@ class ConfigParser {
   emission r g b
    */
 
+  class Config(size: (Int, Int), outFilename: String, maxDepth: Int)
 
   trait Command {
     def name: String
@@ -68,12 +72,51 @@ class ConfigParser {
 
   def parse(filename: String) = parse(Source.fromFile(filename))
 
+  class Builder {
+    var size: (Int, Int) = _
+    var maxDepth = 5
+    var outFile: String = _
+
+    var camera: Camera = _
+    var vertices = ArrayBuffer[Vector4]()
+    var faces = ArrayBuffer[(Int, Int, Int)]()
+    var spheres = ArrayBuffer[Sphere]()
+  }
+
   def parse(input: Source) = {
+    val builder = new Builder()
+
+    val CommentMatch = "#.*".r
+    val SizeMatch = raw"size (\d+) (\d+)".r
+    val MaxDepthMatch = raw"maxdepth (\d+)".r
+    val OutputMatch = raw"output (\S+)".r
+
+    val CameraMatch = raw"camera (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+
+    val MaxVertsMatch = raw"maxverts (\d+)".r
+    val VertexMatch = raw"vertex (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+    val TriMatch = raw"tri (\d+) (\d+) (\d+)".r
+
     for (line <- input.getLines();
           tokens = line.split(" ")) yield {
       tokens.head match {
-        case "size" => Size("size", tokens(1).toInt, tokens(2).toInt)
-        case "maxdepth" => IntCommand("maxdepth", tokens(1).toInt)
+
+        case CommentMatch => // ignore
+        case SizeMatch(x, y) => builder.size = (x.toInt,y.toInt)
+        case MaxDepthMatch(d) => builder.maxDepth = d.toInt
+        case OutputMatch(name) => builder.outFile = name
+
+        case CameraMatch(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz, fovy) =>
+          builder.camera = Camera(Vector4(eyex.toFloat, eyey.toFloat, eyez.toFloat),
+                                  Vector4(atx.toFloat, aty.toFloat, atz.toFloat),
+                                  Vector4(upx.toFloat, upy.toFloat, upz.toFloat),
+                                  fovy.toFloat)
+
+        case MaxVertsMatch(n) => println(s"Ignoring maxverts: $n")
+        case VertexMatch(x, y, z) => builder.vertices += Vector4(x.toFloat, y.toFloat, z.toFloat)
+        case TriMatch(a, b, c) => builder.faces += (a.toInt, b.toInt, c.toInt)
+
+
       }
     }
   }
