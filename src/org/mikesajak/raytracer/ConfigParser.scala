@@ -1,6 +1,6 @@
 package org.mikesajak.raytracer
 
-import org.mikesajak.raytracer.math.Vector4
+import org.mikesajak.raytracer.math.{Transform, Matrix44, Vector4}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -58,17 +58,26 @@ class ConfigParser {
 
   class Config(size: (Int, Int), outFilename: String, maxDepth: Int)
 
-  trait Command {
-    def name: String
-//    def params: Seq[String]
+  sealed trait TransformCmd
+  case class PushTransform() extends TransformCmd
+  case class PopTransform() extends TransformCmd
+
+  trait TransformOp extends TransformCmd {
+    def matrix: Matrix44
+    def invMatrix: Matrix44
   }
+  case class MatrixTransformOp(matrix: Matrix44, invMatrix: Matrix44) extends TransformOp
+
+  case class TranslateOp(t: Vector4)
+    extends MatrixTransformOp(Transform.translation(t), Transform.translation(Vector4.inverse(t)))
+
+  case class RotateOp(angle: Float, axis: Vector4)
+    extends MatrixTransformOp(Transform.rotation(angle, axis), Transform.rotation(-angle, axis))
+
+  case class ScaleOp(s: Vector4)
+    extends MatrixTransformOp(Transform.scale(s), Transform.scale(new Vector4(1/s.x, 1/s.y, 1/s.z)))
 
 
-
-  case class Directive(name: String)
-  case class Size(name: String, width: Int, height: Int) extends Command
-  case class IntCommand(name: String, value: Int)
-  case class Color(name: String, r: Float, g: Float, b: Float)
 
   def parse(filename: String) = parse(Source.fromFile(filename))
 
@@ -81,6 +90,8 @@ class ConfigParser {
     var vertices = ArrayBuffer[Vector4]()
     var faces = ArrayBuffer[(Int, Int, Int)]()
     var spheres = ArrayBuffer[Sphere]()
+
+    var transformCmds = ArrayBuffer[TransformCmd]()
   }
 
   def parse(input: Source) = {
@@ -96,6 +107,16 @@ class ConfigParser {
     val MaxVertsMatch = raw"maxverts (\d+)".r
     val VertexMatch = raw"vertex (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
     val TriMatch = raw"tri (\d+) (\d+) (\d+)".r
+
+    val SphereMatch = raw"sphere (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+
+    val PushTransformMatch = "pushTransform".r
+    val PopTransformMatch = "popTransform".r
+    val TranslationMatch = raw"translate (\d+) (\d+) (\d+)".r
+    val RotationMatch = raw"rotate (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+    val ScaleMatch = raw"scale (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+
+
 
     for (line <- input.getLines();
           tokens = line.split(" ")) yield {
@@ -114,7 +135,9 @@ class ConfigParser {
 
         case MaxVertsMatch(n) => println(s"Ignoring maxverts: $n")
         case VertexMatch(x, y, z) => builder.vertices += Vector4(x.toFloat, y.toFloat, z.toFloat)
-        case TriMatch(a, b, c) => builder.faces += (a.toInt, b.toInt, c.toInt)
+        case TriMatch(a, b, c) => builder.faces += ((a.toInt, b.toInt, c.toInt))
+
+        case SphereMatch(x, y, z, r) => builder.spheres += Sphere(x.toFloat, y.toFloat, z.toFloat, r.toFloat)
 
 
       }

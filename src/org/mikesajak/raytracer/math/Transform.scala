@@ -4,19 +4,21 @@ package org.mikesajak.raytracer.math
  * Created by SG0220070 on 9/22/2015.
  */
 object Transform {
-  def translationMatrix(tx: Float, ty: Float, tz: Float) =
+  def translation(t: Vector4) = translation(t.x, t.y, t.z)
+  def translation(tx: Float, ty: Float, tz: Float) =
       Matrix44(1, 0, 0, tx,
                0, 1, 0, ty,
                0, 0, 1, tz,
                0, 0, 0, 1)
 
-  def scaleMatrix(sx: Float, sy: Float, sz: Float) =
+  def scale(s: Vector4) = scale(s.x, s.y, s.z)
+  def scale(sx: Float, sy: Float, sz: Float) =
       Matrix44(sx,  0,  0,  0,
                 0, sy,  0,  0,
                 0,  0, sz,  0,
                 0,  0,  0,  1)
 
-  def rotationMatrix(theta: Float, axis: Vector4) = {
+  def rotation(theta: Float, axis: Vector4) = {
     val cosTheta = math.cos(theta).toFloat
     val R = Matrix44() *= cosTheta
     R += crossProdMatrix(axis) *= math.sin(theta).toFloat
