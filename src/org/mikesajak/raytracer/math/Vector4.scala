@@ -6,7 +6,7 @@ import org.mikesajak.raytracer.math
  * Created by SG0220070 on 9/22/2015.
  */
 class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
-  val data = Array[Float](4)
+  val data = Array[Float](x0, y0, z0, w0)
 
   def this(v: Vector4) = this(v.x, v.y, v.z, v.w)
 
@@ -103,8 +103,10 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
   def cross(v: Vector4) =
     set(y*v.z - z*v.y,
         z*v.x - x*v.z,
-        x*v.y - y*v.z,
+        x*v.y - y*v.x,
         0)
+
+  override def toString = s"[$x, $y, $z, $w]"
 }
 
 object Vector4 {

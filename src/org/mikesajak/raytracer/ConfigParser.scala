@@ -8,7 +8,7 @@ import scala.io.Source
 /**
  * Created by mike on 22.09.15.
  */
-class ConfigParser {
+object ConfigParser {
   /*
   (Format)
   # comment
@@ -56,105 +56,251 @@ class ConfigParser {
   emission r g b
    */
 
-  class Config(size: (Int, Int), outFilename: String, maxDepth: Int)
+  def parse(filename: String): (Config, Scene) = parse(Source.fromFile(filename))
 
-  sealed trait TransformCmd
-  case class PushTransform() extends TransformCmd
-  case class PopTransform() extends TransformCmd
-
-  trait TransformOp extends TransformCmd {
-    def matrix: Matrix44
-    def invMatrix: Matrix44
-  }
-  case class MatrixTransformOp(matrix: Matrix44, invMatrix: Matrix44) extends TransformOp
-
-  case class TranslateOp(t: Vector4)
-    extends MatrixTransformOp(Transform.translation(t), Transform.translation(Vector4.inverse(t)))
-
-  case class RotateOp(angle: Float, axis: Vector4)
-    extends MatrixTransformOp(Transform.rotation(angle, axis), Transform.rotation(-angle, axis))
-
-  case class ScaleOp(s: Vector4)
-    extends MatrixTransformOp(Transform.scale(s), Transform.scale(new Vector4(1/s.x, 1/s.y, 1/s.z)))
-
-
-
-  def parse(filename: String) = parse(Source.fromFile(filename))
-
-  class Builder {
-    var size: (Int, Int) = _
-    var maxDepth = 5
-    var outFile: String = _
-
-    var camera: Camera = _
-    var vertices = ArrayBuffer[Vector4]()
-    var faces = ArrayBuffer[(Int, Int, Int)]()
-    var spheres = ArrayBuffer[Sphere]()
-
-    var transformCmds = ArrayBuffer[TransformCmd]()
-  }
-
-  def parse(input: Source) = {
-    val builder = new Builder()
+  def parse(input: Source): (Config, Scene) = {
+    val configBuilder= Config.builder()
+    val sceneBuilder = new SceneBuilder()
 
     val CommentMatch = "#.*".r
-    val SizeMatch = raw"size (\d+) (\d+)".r
-    val MaxDepthMatch = raw"maxdepth (\d+)".r
+    val EmptyMatch = raw"\s*".r
+
+
+    val float = raw"([-+]?\d+(?:\.\d+)?|\.\d+)".r
+    val int = raw"(\d+)"
+
+    val SizeMatch = s"size $int $int".r
+    val MaxDepthMatch = s"maxdepth $int".r
     val OutputMatch = raw"output (\S+)".r
 
-    val CameraMatch = raw"camera (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+    val CameraMatch = s"camera $float $float $float $float $float $float $float $float $float $float".r
 
-    val MaxVertsMatch = raw"maxverts (\d+)".r
-    val VertexMatch = raw"vertex (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
-    val TriMatch = raw"tri (\d+) (\d+) (\d+)".r
+    val MaxVertsMatch = s"maxverts $int".r
+    val MaxVertNormsMatch = s"maxvertnorms $int".r
+    val VertexMatch = s"vertex $float $float $float".r
+    val VertexNormalMatch = s"vertex  $float $float $float".r
+    val TriMatch = s"tri $int $int $int".r
+    val TriNormalMatch = s"tri $int $int $int".r
 
-    val SphereMatch = raw"sphere (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+    val SphereMatch = s"sphere $float $float $float $float".r
 
     val PushTransformMatch = "pushTransform".r
     val PopTransformMatch = "popTransform".r
-    val TranslationMatch = raw"translate (\d+) (\d+) (\d+)".r
-    val RotationMatch = raw"rotate (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
-    val ScaleMatch = raw"scale (\d+(?:\.\d+)) (\d+(?:\.\d+)) (\d+(?:\.\d+))".r
+    val TranslationMatch = s"translate $float $float$float".r
+    val RotationMatch = s"rotate $float $float $float $float".r
+    val ScaleMatch = s"scale $float $float $float".r
 
+    val DirLightMatch = s"directional $float $float $float $float $float $float".r
+    val PointLightMatch= s"point $float $float $float $float $float $float".r
+    val AttenuationMatch = s"attenuation $float $float $float".r
 
+    val AmbientMatch = s"ambient $float $float $float".r
+    val DiffuseMatch = s"diffuse $float $float $float".r
+    val SpecularMatch = s"specular $float $float $float".r
+    val ShininessMatch = s"shininess $float".r
+    val EmissionMatch = s"emission $float $float $float".r
 
-    for (line <- input.getLines();
-          tokens = line.split(" ")) yield {
-      tokens.head match {
+    for (rawLine <- input.getLines();
+         line = rawLine.trim) {
+      line match {
 
-        case CommentMatch => // ignore
-        case SizeMatch(x, y) => builder.size = (x.toInt,y.toInt)
-        case MaxDepthMatch(d) => builder.maxDepth = d.toInt
-        case OutputMatch(name) => builder.outFile = name
+        case CommentMatch() => // ignore
+        case EmptyMatch() => // ignore
+
+        case SizeMatch(x, y) => configBuilder.size = (x.toInt,y.toInt)
+        case MaxDepthMatch(d) => configBuilder.maxDepth = d.toInt
+        case OutputMatch(name) => configBuilder.outFile = name
 
         case CameraMatch(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz, fovy) =>
-          builder.camera = Camera(Vector4(eyex.toFloat, eyey.toFloat, eyez.toFloat),
-                                  Vector4(atx.toFloat, aty.toFloat, atz.toFloat),
-                                  Vector4(upx.toFloat, upy.toFloat, upz.toFloat),
-                                  fovy.toFloat)
+          sceneBuilder.camera = new Camera(Vector4(eyex.toFloat, eyey.toFloat, eyez.toFloat),
+                                           Vector4(atx.toFloat, aty.toFloat, atz.toFloat),
+                                           Vector4(upx.toFloat, upy.toFloat, upz.toFloat),
+                                           fovy.toFloat)
 
+        // geometry
         case MaxVertsMatch(n) => println(s"Ignoring maxverts: $n")
-        case VertexMatch(x, y, z) => builder.vertices += Vector4(x.toFloat, y.toFloat, z.toFloat)
-        case TriMatch(a, b, c) => builder.faces += ((a.toInt, b.toInt, c.toInt))
+        case MaxVertNormsMatch(n) => println(s"Ignoring maxvertnorms: $n")
 
-        case SphereMatch(x, y, z, r) => builder.spheres += Sphere(x.toFloat, y.toFloat, z.toFloat, r.toFloat)
+        case VertexMatch(x, y, z) => sceneBuilder.addVertex(Vector4(x.toFloat, y.toFloat, z.toFloat))
+        case VertexNormalMatch(x, y, z) => sceneBuilder.addNormal(Vector4(x.toFloat, y.toFloat, z.toFloat))
+        case TriMatch(a, b, c) => sceneBuilder.addFace(a.toInt, b.toInt, c.toInt)
+        case TriNormalMatch(a, b, c) => sceneBuilder.addFaceNormal(a.toInt, b.toInt, c.toInt)
+        case SphereMatch(x, y, z, r) => sceneBuilder.addSphere(Vector4(x.toFloat, y.toFloat, z.toFloat), r.toFloat)
 
+        // lights & materials
+        case DirLightMatch(dx, dy, dz, r, g, b) =>
+          val dir = Vector4(dx.toFloat, dy.toFloat, dz.toFloat)
+          val color = Color4(r.toFloat, r.toFloat, b.toFloat)
+          sceneBuilder.addDirLight(dir, color)
+
+        case PointLightMatch(px, py, pz, r, g, b) =>
+          val pos = Vector4(px.toFloat, py.toFloat, pz.toFloat)
+          val color = Color4(r.toFloat, r.toFloat, b.toFloat)
+          sceneBuilder.addPosLight(pos, color)
+
+        case AmbientMatch(r, g, b) => sceneBuilder.ambient = Color4(r.toFloat, g.toFloat, b.toFloat)
+        case DiffuseMatch(r, g, b) => sceneBuilder.diffuse = Color4(r.toFloat, g.toFloat, b.toFloat)
+        case SpecularMatch(r, g, b) => sceneBuilder.specular = Color4(r.toFloat, g.toFloat, b.toFloat)
+        case ShininessMatch(s) => sceneBuilder.shininess = s.toFloat
+        case EmissionMatch(r, g, b) => sceneBuilder.emission = Color4(r.toFloat, g.toFloat, b.toFloat)
+
+        // transformations
+        case PushTransformMatch() => sceneBuilder.pushTransform()
+
+        case PopTransformMatch() => sceneBuilder.popTransform()
+
+        case TranslationMatch(tx, ty, tz) =>
+          val t = Vector4(tx.toFloat, ty.toFloat, tz.toFloat)
+          sceneBuilder.addTransform(Transform.translation(t))
+
+        case RotationMatch(ax, ay, az, angle) =>
+          val axis = Vector4(ax.toFloat, ay.toFloat, az.toFloat)
+          sceneBuilder.addTransform(Transform.rotation(angle.toFloat, axis))
+
+        case ScaleMatch(sx, sy, sz) =>
+          val s = Vector4(sx.toFloat, sy.toFloat, sz.toFloat)
+          sceneBuilder.addTransform(Transform.scale(s))
+
+        case _ => println(s"No match for line: $line")
 
       }
     }
+
+    (configBuilder.build(), sceneBuilder.scene)
   }
 
-}
+  class SceneBuilder(val scene: Scene) {
+    def this() = this(new Scene())
 
-object ConfigParser {
+    private val vertices = ArrayBuffer[Vector4]()
+    private val vertexNormals = ArrayBuffer[Vector4]()
+    private val faces = ArrayBuffer[(Int, Int, Int)]()
+    private val faceNormals = ArrayBuffer[(Int, Int, Int)]()
+    private val spheres = ArrayBuffer[Sphere]()
+
+    private var transformationStack = List[Transform]()
+    private var curTransform = new Transform(Matrix44.identity(), Matrix44.identity())
+
+    private var curAttenuation = new Attenuation(1,0,0)
+    private var curAmbient = new Color4(0.2f, 0.2f, 0.2f)
+    private var curDiffuse = new Color4(0,0,0)
+    private var curSpecular = new Color4(0,0,0)
+    private var curShininess = 0.0f
+    private var curEmission = new Color4(0,0,0)
+
+    def camera = scene.camera
+    def camera_=(cam: Camera) = {
+      println(s"Camera=$cam")
+      scene.camera = cam
+    }
+
+    def addVertex(v:Vector4)= {
+      println(s"Adding vertex: $v")
+      vertices += v
+    }
+
+    def addNormal(n: Vector4) = {
+      println(s"Adding normal: $n")
+      vertexNormals += n
+    }
+
+    def addFace(v1: Int, v2: Int, v3: Int) = {
+      println(s"Adding face: ($v1, $v2, $v3)")
+      faces += ((v1, v2, v3))
+      // first try - simple model with single triangle
+      scene.models :+= Model(Triangle(vertices(v1), vertices(v2), vertices(v3)), transform, material)
+    }
+
+    def addFaceNormal(n1: Int, n2: Int, n3: Int) = {
+      println(s"Adding face normals: ($n1, $n2, $n3)")
+      faceNormals += ((n1, n2, n3))
+    }
+
+    def addSphere(center: Vector4, radius: Float) = {
+      println(s"Adding sphere: center=$center, radius=$radius")
+      //      spheres += Sphere(center, radius)
+      scene.models :+= Model(new Sphere(center, radius), transform, material)
+    }
+
+    def attenuation = curAttenuation
+    def attenuation_=(a: Attenuation) = {
+      println(s"Attenuation=$a")
+      curAttenuation = a
+    }
+
+    def ambient = curAmbient
+    def ambient_=(a: Color4) = {
+      println(s"Ambient color=$a")
+      curAmbient = a
+    }
+
+    def diffuse = curDiffuse
+    def diffuse_=(d: Color4) = {
+      println(s"Diffuse color=$d")
+      curDiffuse = d
+    }
+
+    def specular = curSpecular
+    def specular_=(s: Color4) = {
+      println(s"Specular color=$s")
+      curSpecular = s
+    }
+
+    def shininess = curShininess
+    def shininess_=(s: Float) = {
+      println(s"Shininess=$s")
+      curShininess = s
+    }
+
+    def emission = curEmission
+    def emission_=(e: Color4) = {
+      println(s"Emission color=$e")
+      curEmission = e
+    }
+
+    def pushTransform() = {
+      println(s"Push transform: $curTransform")
+      transformationStack ::= new Transform(curTransform)
+    }
+
+    def popTransform() = {
+      print(s"Pop transform prev: $curTransform")
+      curTransform = transformationStack.head
+      transformationStack = transformationStack.tail
+      println(s" cur: $curTransform")
+    }
+
+    def material =
+      Material(curAmbient, curDiffuse, curSpecular, curShininess, curEmission)
+
+    //    def setTransform(t: Transform) = curTransform := t
+
+    def addTransform(t: Transform) = {
+      println(s"Add transform: $t")
+      curTransform = Transform.combine(curTransform, t)
+    }
+
+    def transform = new Transform(curTransform)
+
+    def addDirLight(dir: Vector4, color: Color4) = {
+      println(s"Add directional light: dir=$dir, color=$color")
+      val lightDir = dir * curTransform.matrix
+      scene.lights :+= DirLight(lightDir, color, attenuation)
+    }
+
+    def addPosLight(pos: Vector4, color: Color4) = {
+      println(s"Add positional light: pos=$pos, color=$color")
+      val lightPos = pos * curTransform.matrix
+      scene.lights :+= PointLight(lightPos, color, attenuation)
+    }
+  }
+
+
+
   def main(args: Array[String]): Unit = {
-    new ConfigParser().parse(Source.fromString(
-      """
-        |size 256 256
-        |
-        |translate 1 2 3
-        |
-        |rotate 1 2 3 4
-      """.stripMargin))
+    val (config, scene) = ConfigParser.parse(Source.fromURL(getClass.getResource("/simple-sphere.test")))
+
+    println(config)
+    println(scene)
   }
 }
