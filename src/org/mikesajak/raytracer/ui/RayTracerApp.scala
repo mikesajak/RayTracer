@@ -12,7 +12,7 @@ import scalafx.Includes._
 import scalafx.application.{Platform, JFXApp}
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.event.ActionEvent
-import scalafx.geometry.Insets
+import scalafx.geometry.{Pos, Insets}
 import scalafx.scene.image.PixelWriter
 import scalafx.scene.paint.{Color, Paint}
 import scalafx.scene.{Node, Scene}
@@ -20,8 +20,8 @@ import scalafx.scene.canvas.Canvas
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.input.KeyCombination
-import scalafx.scene.layout.{HBox, BorderPane, VBox}
-import scalafx.scene.text.{Font, TextFlow, Text}
+import scalafx.scene.layout.{GridPane, HBox, BorderPane, VBox}
+import scalafx.scene.text.{TextAlignment, Font, TextFlow, Text}
 import collection.JavaConversions._
 import scalafx.stage.{WindowEvent, FileChooser}
 import scalafx.stage.FileChooser.ExtensionFilter
@@ -109,6 +109,62 @@ object RayTracerApp extends JFXApp {
 
   val summaryPane = new HBox(20)
 
+  val summaryPane2 = new HBox {
+
+    alignment = Pos.TopLeft
+
+    val cfgPane = new GridPane {
+      alignment = Pos.Center
+      hgap = 10
+      vgap = 10
+      padding = Insets(25, 25, 25, 25)
+
+      add(new Label("Config") { font = new Font("Arial", 18) }, 0, 0, 4, 1)
+
+      add(new Label("size=") {textAlignment = TextAlignment.Right }, 0, 1, 1, 1)
+      val widthField = new TextField() { prefColumnCount = 2 }
+      add(widthField, 1, 1, 1, 1)
+      val heightField = new TextField() { prefColumnCount = 2 }
+      add(heightField, 2, 1, 1, 1)
+
+      add(new Label("Max depth=") {textAlignment = TextAlignment.Right }, 0, 2, 1, 1)
+      val maxDepthField = new TextField() { prefColumnCount = 1 }
+      add(maxDepthField, 1, 2, 2, 1)
+
+      add(new Label("Out file=") {textAlignment = TextAlignment.Right }, 0, 3, 1, 1)
+      val outFileField = new TextField() { prefColumnCount = 10 }
+      add(outFileField, 1, 3, 2, 1)
+    }
+
+    val camPane = new GridPane() {
+      alignment = Pos.Center
+      hgap = 10
+      vgap = 10
+      padding = Insets(25, 25, 25, 25)
+
+      add(new Label("Camera") { font = new Font("Arial", 18) }, 0, 0, 4, 1)
+
+      add(new Label("eye=") {textAlignment = TextAlignment.Right }, 0, 1, 1, 1)
+      val camEyeField = new TextField() { prefColumnCount = 10 }
+      add(camEyeField, 1, 1, 1, 1)
+
+      add(new Label("ax=") {textAlignment = TextAlignment.Right }, 0, 2, 1, 1)
+      val camAxField = new TextField() { prefColumnCount = 10 }
+      add(camAxField, 1, 2, 1, 1)
+
+      add(new Label("ay=") {textAlignment = TextAlignment.Right }, 0, 3, 1, 1)
+      val camAyField = new TextField() { prefColumnCount = 10 }
+      add(camAyField, 1, 3, 1, 1)
+
+      add(new Label("az=") {textAlignment = TextAlignment.Right }, 0, 4, 1, 1)
+      val camAzField = new TextField() { prefColumnCount = 10 }
+      add(camAzField, 1, 4, 1, 1)
+    }
+
+    children = List(cfgPane, camPane)
+  }
+
+
   val startRenderingButton = new Button("Start ray tracing") {
     onAction = (ae: ActionEvent) => {
       canvas.width = renderConfig.size._1
@@ -119,13 +175,6 @@ object RayTracerApp extends JFXApp {
       canvas.clear(Color.Gray)
 
       guiUpdaterActor ! RenderRequest(renderConfig, sceneDef, canvasPixelSink)
-//
-//      val rayTracer = new RayTracer()
-//      rayTracer.process(renderConfig, sceneDef, new CanvasPixelOutput(canvas.graphicsContext2D.pixelWriter))
-
-
-//      text = "Start ray tracing"
-
     }
 
     disable = true
@@ -174,6 +223,7 @@ object RayTracerApp extends JFXApp {
 
           children ++= List(
             summaryPane,
+//            summaryPane2,
             startRenderingButton,
             canvasPane
           )

@@ -113,8 +113,15 @@ object Vector4 {
   def apply() = new Vector4(0,0,0,0)
   def apply(x: Float, y: Float, z: Float, w: Float = 0) = new Vector4(x,y,z,w)
 
-  def normalize(v: Vector4) = v * (1.0f / v.length)
+  def normalize(v: Vector4) = v *= (1.0f / v.length)
   def inverse(v: Vector4) = new Vector4(v).inverse()
 
   def cross(v1: Vector4, v2: Vector4) = new Vector4(v1).cross(v2)
+
+  def dist(v1: Vector4, v2: Vector4) = {
+    val dx = v1.x - v2.x
+    val dy = v1.y - v2.y
+    val dz = v1.z - v2.z
+    scala.math.sqrt(dx * dx + dy * dy + dz * dz).toFloat
+  }
 }

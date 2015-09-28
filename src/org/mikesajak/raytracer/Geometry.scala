@@ -1,6 +1,6 @@
 package org.mikesajak.raytracer
 
-import org.mikesajak.raytracer.math.Vector4
+import org.mikesajak.raytracer.math.{Matrix44, Vector4}
 
 /**
  * Created by mike on 23.09.15.
@@ -38,7 +38,7 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
         val point = ray.point(t)
         val normal = (point - center).normalize()
 
-        Some(Intersection(ray, t, normal))
+        Some(new RayIntersection(ray, t, normal))
       }
       else None
     }
@@ -72,7 +72,7 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
         val point = ray.point(t)
         val normal = (point - center).normalize()
 
-        Some(Intersection(ray, t, normal))
+        Some(new RayIntersection(ray, t, normal))
       }
       else None
     }
@@ -122,17 +122,32 @@ case class Mesh(triangles: Seq[Triangle]) extends Geometry {
 
 
 case class Ray(origin: Vector4, dir: Vector4) {
+  def this(ray: Ray) = this(new Vector4(ray.origin), new Vector4(ray.dir))
+
+  origin.w = 1
+  dir.w = 0
   def point(t: Float) = {
     val p = new Vector4(dir)
     p *= t
     p += origin
     p
   }
+
+  def transform(m: Matrix44) = {
+    origin *= m
+    dir *= m
+    dir.normalize()
+    this
+  }
 }
 
-//case class Intersection(point: Vector4, normal: Vector4)
-case class Intersection(ray: Ray, t: Float, val normal: Vector4) {
-  def point = ray.point(t)
+object Ray {
+  def transform(ray: Ray, m: Matrix44) = new Ray(ray).transform(m)
+}
+
+case class Intersection(point: Vector4, normal: Vector4)
+class RayIntersection(ray: Ray, t: Float, override val normal: Vector4) extends Intersection(ray.point(t), normal) {
+//  def point = ray.point(t)
 
   override def toString = s"Intersection(t=$t, point=$point, normal=$normal)"
 }

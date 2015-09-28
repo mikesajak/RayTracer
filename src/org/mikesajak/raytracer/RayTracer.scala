@@ -3,7 +3,7 @@ package org.mikesajak.raytracer
 import java.util.concurrent.TimeUnit
 
 import com.google.common.base.Stopwatch
-import org.mikesajak.raytracer.math.Vector4
+import org.mikesajak.raytracer.math.{Transform, Matrix44, Vector4}
 
 /**
  * Created by mike on 26.09.15.
@@ -56,7 +56,7 @@ class RayTracer {
         yield (x,y)
 
     val stats = new Stats
-    pixels.par foreach { case pixel@(x,y) =>
+    pixels foreach { case pixel@(x,y) =>
       val startTime = System.nanoTime()
       val ray = mkRay(x,y, config.size._1, config.size._2, scene.camera)
       val rayTime = System.nanoTime()
@@ -117,13 +117,17 @@ class RayTracer {
   def intersect(ray: Ray, scene: Scene): Option[Intersection] = {
     val intersections =
       for (model <- scene.modelsCloseTo(ray);
-           intersection <- model.geometry.intersect(ray);
-           if intersection.t > 0)
+           modelSpaceRay = Ray.transform(ray, model.transformation.inverse);
+           modelSpaceIntersection <- model.geometry.intersect(modelSpaceRay);
+           intersection = transform(modelSpaceIntersection, model.transformation))
         yield intersection
 
-    if (intersections.nonEmpty) Some(intersections.minBy(i => i.t))
+    if (intersections.nonEmpty) Some(intersections.minBy(i => Vector4.dist(scene.camera.origin, i.point)))
     else None
   }
+
+  def transform(intersection: Intersection, t: Transform) =
+    Intersection(intersection.point * t.matrix, intersection.normal * Matrix44.transpose(t.inverse))
 
   def findColor(intersection: Intersection): Color4 = {
     // todo:

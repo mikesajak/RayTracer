@@ -112,29 +112,29 @@ object ConfigParser {
         case OutputMatch(name) => configBuilder.outFile = name
 
         case CameraMatch(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz, fovy) =>
-          sceneBuilder.camera = new Camera(Vector4(eyex.toFloat, eyey.toFloat, eyez.toFloat),
-                                           Vector4(atx.toFloat, aty.toFloat, atz.toFloat),
-                                           Vector4(upx.toFloat, upy.toFloat, upz.toFloat),
+          sceneBuilder.camera = new Camera(Vector4(eyex.toFloat, eyey.toFloat, eyez.toFloat, 1),
+                                           Vector4(atx.toFloat, aty.toFloat, atz.toFloat, 1),
+                                           Vector4(upx.toFloat, upy.toFloat, upz.toFloat, 0),
                                            fovy.toFloat)
 
         // geometry
         case MaxVertsMatch(n) => println(s"Ignoring maxverts: $n")
         case MaxVertNormsMatch(n) => println(s"Ignoring maxvertnorms: $n")
 
-        case VertexMatch(x, y, z) => sceneBuilder.addVertex(Vector4(x.toFloat, y.toFloat, z.toFloat))
+        case VertexMatch(x, y, z) => sceneBuilder.addVertex(Vector4(x.toFloat, y.toFloat, z.toFloat, 1))
         case VertexNormalMatch(x, y, z) => sceneBuilder.addNormal(Vector4(x.toFloat, y.toFloat, z.toFloat))
         case TriMatch(a, b, c) => sceneBuilder.addFace(a.toInt, b.toInt, c.toInt)
         case TriNormalMatch(a, b, c) => sceneBuilder.addFaceNormal(a.toInt, b.toInt, c.toInt)
-        case SphereMatch(x, y, z, r) => sceneBuilder.addSphere(Vector4(x.toFloat, y.toFloat, z.toFloat), r.toFloat)
+        case SphereMatch(x, y, z, r) => sceneBuilder.addSphere(Vector4(x.toFloat, y.toFloat, z.toFloat, 1), r.toFloat)
 
         // lights & materials
         case DirLightMatch(dx, dy, dz, r, g, b) =>
-          val dir = Vector4(dx.toFloat, dy.toFloat, dz.toFloat)
+          val dir = Vector4(dx.toFloat, dy.toFloat, dz.toFloat, 0)
           val color = Color4(r.toFloat, r.toFloat, b.toFloat)
           sceneBuilder.addDirLight(dir, color)
 
         case PointLightMatch(px, py, pz, r, g, b) =>
-          val pos = Vector4(px.toFloat, py.toFloat, pz.toFloat)
+          val pos = Vector4(px.toFloat, py.toFloat, pz.toFloat, 1)
           val color = Color4(r.toFloat, r.toFloat, b.toFloat)
           sceneBuilder.addPosLight(pos, color)
 
