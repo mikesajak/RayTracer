@@ -1,43 +1,11 @@
 package org.mikesajak.raytracer
 
-import java.util.concurrent.TimeUnit
-
-import com.google.common.base.Stopwatch
-import org.mikesajak.raytracer.math.{Transform, Matrix44, Vector4}
+import org.mikesajak.raytracer.math.{Matrix44, Transform, Vector4}
 
 /**
  * Created by mike on 26.09.15.
  */
 class RayTracer {
-
-  class Stats {
-    var statsMap = collection.mutable.Map[String, AverageCalc]()
-
-    def accumulate(name: String, value: Long) = {
-      val avgCalc = statsMap.getOrElseUpdate(name, new AverageCalc)
-      avgCalc.acc(value)
-    }
-
-    def get(name: String) = statsMap.get(name)
-
-    override def toString = statsMap.toString
-
-  }
-  
-  class AverageCalc {
-    private var avg0 = 0.0
-    private var count = 0
-    
-    def acc(x: Double) = {
-      count += 1
-      avg0 += (x - avg0) / count
-    }
-    
-    def avg = avg0
-    def numSamples = count
-    
-    override def toString = s"{average=$avg0, num samples=$count}"
-  }
 
   def process(config: Config, scene: Scene, pixelOutput: PixelOutput) = {
 
@@ -56,7 +24,11 @@ class RayTracer {
         yield (x,y)
 
     val stats = new Stats
-    pixels foreach { case pixel@(x,y) =>
+    pixels.par foreach { case pixel@(x,y) =>
+      if (x == config.size._1/2 && y == config.size._2/2) {
+        println("center")
+      }
+
       val startTime = System.nanoTime()
       val ray = mkRay(x,y, config.size._1, config.size._2, scene.camera)
       val rayTime = System.nanoTime()
@@ -66,7 +38,7 @@ class RayTracer {
       val intersectionTime = System.nanoTime()
       stats.accumulate("intersection", intersectionTime - rayTime)
 
-      val color = intersection.map(i => findColor(i)) getOrElse Color4(0,0,0)
+      val color = intersection.map{ case (m,i) => findColor(i, ray, m, scene) } getOrElse Color4(0,0,0)
       val lightingTime = System.nanoTime()
       stats.accumulate("lighting", lightingTime - intersectionTime)
       stats.accumulate("ray tracing", lightingTime - startTime)
@@ -114,24 +86,60 @@ class RayTracer {
   }
 
   ///////////////////
-  def intersect(ray: Ray, scene: Scene): Option[Intersection] = {
+  def intersect(ray: Ray, scene: Scene): Option[(Model, Intersection)] = {
     val intersections =
       for (model <- scene.modelsCloseTo(ray);
            modelSpaceRay = Ray.transform(ray, model.transformation.inverse);
            modelSpaceIntersection <- model.geometry.intersect(modelSpaceRay);
            intersection = transform(modelSpaceIntersection, model.transformation))
-        yield intersection
+        yield (model, intersection)
 
-    if (intersections.nonEmpty) Some(intersections.minBy(i => Vector4.dist(scene.camera.origin, i.point)))
+    if (intersections.nonEmpty) Some(intersections.minBy{ case (m, i) => Vector4.dist(scene.camera.origin, i.point) })
     else None
   }
 
   def transform(intersection: Intersection, t: Transform) =
     Intersection(intersection.point * t.matrix, intersection.normal * Matrix44.transpose(t.inverse))
 
-  def findColor(intersection: Intersection): Color4 = {
-    // todo:
-    Color4(1,0,0)
+  val EPSILON = 0.0001f
+
+  def findColor(intersection: Intersection, cameraRay: Ray, model: Model, scene: Scene): Color4 = {
+    val constantColor = model.material.ambient + model.material.emission
+    val shadingColor =
+      (scene.lights foldLeft Color4(0,0,0)) { (colorAcc, light) =>
+        val dirToLight = light.directionTo(intersection.point).inverse()
+
+        //move intersection point slightly towards the light to avoid positioning it under the surface because of numerical error
+        val point = Ray(intersection.point, dirToLight).point(EPSILON)
+        val ray = Ray(point, dirToLight)
+
+        val visible = intersect(ray, scene) == None
+        if (visible) {
+          val lightIntensity = light.colorIntensity(intersection.point)
+          val pointColor = Color4(0,0,0)
+          // add diffuse term
+          val lightDirCosine = dirToLight * intersection.normal
+          if (lightDirCosine > 0)
+            pointColor += model.material.diffuse * lightDirCosine
+
+          // add specular term
+          val halfVec = (dirToLight - cameraRay.dir).normalize()
+          // note: camera ray is ray _from_ camera, but for half vector I need to add dir to light and dir _to_ eye
+          // so instead of inverting cameraRay I just subtract it
+          val halfVecNCosine = (halfVec * intersection.normal)
+          if (halfVecNCosine > 0) {
+            val shininess = scala.math.pow(halfVecNCosine, model.material.shininess).toFloat
+            pointColor += model.material.specular * shininess
+          }
+
+          colorAcc += lightIntensity * pointColor
+        } else colorAcc
+    }
+
+    if (shadingColor.r < 0.1 || shadingColor.g < 0.1 || shadingColor.b < 0.1) {
+//      println("dupa")
+    }
+    constantColor += shadingColor
   }
 
 }

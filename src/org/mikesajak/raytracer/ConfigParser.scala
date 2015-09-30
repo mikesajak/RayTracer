@@ -130,12 +130,12 @@ object ConfigParser {
         // lights & materials
         case DirLightMatch(dx, dy, dz, r, g, b) =>
           val dir = Vector4(dx.toFloat, dy.toFloat, dz.toFloat, 0)
-          val color = Color4(r.toFloat, r.toFloat, b.toFloat)
+          val color = Color4(r.toFloat, g.toFloat, b.toFloat)
           sceneBuilder.addDirLight(dir, color)
 
         case PointLightMatch(px, py, pz, r, g, b) =>
           val pos = Vector4(px.toFloat, py.toFloat, pz.toFloat, 1)
-          val color = Color4(r.toFloat, r.toFloat, b.toFloat)
+          val color = Color4(r.toFloat, g.toFloat, b.toFloat)
           sceneBuilder.addPosLight(pos, color)
 
         case AmbientMatch(r, g, b) => sceneBuilder.ambient = Color4(r.toFloat, g.toFloat, b.toFloat)
@@ -285,7 +285,7 @@ object ConfigParser {
     def addDirLight(dir: Vector4, color: Color4) = {
       println(s"Add directional light: dir=$dir, color=$color")
       val lightDir = dir * curTransform.matrix
-      scene.lights :+= DirLight(lightDir, color, attenuation)
+      scene.lights :+= DirLight(lightDir, color)
     }
 
     def addPosLight(pos: Vector4, color: Color4) = {

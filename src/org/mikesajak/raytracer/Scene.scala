@@ -35,21 +35,6 @@ class Camera(val eye: Vector4, val at: Vector4, private val up0: Vector4, val fo
     s"Camera(eye=$eye, at=$at, up=$up0, fovy=$fovy)"
 }
 
-case class Color4(r: Float, g: Float, b: Float, a: Float = 1.0f) {
-  override def toString =s"Color4(r=$r, g=$g, b=$b, a=$a)"
-
-  def apply(idx: Int) = idx match {
-    case 0 => r
-    case 1 => g
-    case 2 => b
-    case 3 => a
-  }
-
-  def argb = pack(2,1,0,3)
-  def pack(i1: Int, i2: Int, i3: Int, i4: Int) =
-    (apply(i1) * 255).toInt | ((apply(i2) * 255).toInt << 8) | ((apply(i3) * 255).toInt << 16) | ((apply(i4) * 255).toInt << 24)
-}
-
 case class Material(ambient: Color4, diffuse: Color4, specular: Color4, shininess: Float, emission: Color4) {
   override def toString =
     s"Material(ambient=$ambient, diffuse=$diffuse, specular=$specular, shininess=$shininess, emission=$emission"
@@ -57,15 +42,32 @@ case class Material(ambient: Color4, diffuse: Color4, specular: Color4, shinines
 
 case class Model(geometry: Geometry, transformation: Transform, material: Material)
 
-case class Attenuation(const: Float, linear: Float, quadratic: Float)
-
-trait Light
-
-case class DirLight(dir: Vector4, color: Color4, attenuation: Attenuation) extends Light{
-  override def toString =
-    s"DirLight(dir=$dir, color=$color, attenuation=$attenuation)"
+case class Attenuation(constant: Float, linear: Float, quadratic: Float) {
+  def calculate(dist: Float)=
+    1.0f / (constant + linear*dist + quadratic*dist*dist)
 }
-case class PointLight(pos: Vector4, color: Color4, attenuation: Attenuation) extends Light {
+
+abstract class Light(val color: Color4) {
+  def directionTo(p: Vector4): Vector4
+  def colorIntensity(p: Vector4): Color4
+}
+
+case class DirLight(dir: Vector4, override val color: Color4) extends Light(color) {
+  dir.w = 0 // make sure that homogeneous coordinate is correct for direction vector
+  dir.normalize()
+
+  override def directionTo(p: Vector4) = new Vector4(dir)
+  override def colorIntensity(p: Vector4) = new Color4(color)
+
+  override def toString =
+    s"DirLight(dir=$dir, color=$color)"
+}
+case class PointLight(pos: Vector4, override val color: Color4,attenuation: Attenuation) extends Light(color) {
+  pos.w = 1 // make sure that homogeneous coordinate is correct for position vector
+
+  override def directionTo(p: Vector4) = (p - pos).normalize()
+  override def colorIntensity(p: Vector4) = color * attenuation.calculate((p - pos).length)
+
   override def toString =
     s"PointLight(pos=$pos, color=$color, attenuation=$attenuation"
 }

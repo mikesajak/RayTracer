@@ -3,7 +3,8 @@ package org.mikesajak.raytracer
 /**
  * Created by mike on 26.09.15.
  */
-case class Config(size: (Int, Int), maxDepth: Int, outFile: String)
+case class Config(size: (Int, Int), maxDepth: Int, outFile: String,
+                  parallelComputing: Boolean = true, epsilon: Float = 0.0001f)
 
 object Config {
   class Builder {

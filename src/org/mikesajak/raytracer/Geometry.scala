@@ -6,7 +6,7 @@ import org.mikesajak.raytracer.math.{Matrix44, Vector4}
  * Created by mike on 23.09.15.
  */
 trait Geometry {
-  def intersect(ray: Ray): Option[Intersection]
+  def intersect(ray: Ray): Option[RayIntersection]
 }
 
 case class Sphere(center: Vector4, radius: Float) extends Geometry {
@@ -81,7 +81,7 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
 
 case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
   def normal = ((p2 - p1) cross (p3 - p1)).normalize()
-  override def intersect(ray: Ray): Option[Intersection] = {
+  override def intersect(ray: Ray): Option[RayIntersection] = {
     val n = normal
     val rayAngleCos = ray.dir * n
     if (rayAngleCos > 0) {
@@ -101,7 +101,7 @@ case class IndexedTriangle(vertices: Seq[Vector4], i1: Int, i2: Int, i3: Int) ex
   def p3 = vertices(i3)
 
   def normal = ((p2 - p1) cross (p3 - p1)).normalize()
-  override def intersect(ray: Ray): Option[Intersection] = {
+  override def intersect(ray: Ray): Option[RayIntersection] = {
     None
   }
 }
@@ -114,9 +114,10 @@ case class Mesh(triangles: Seq[Triangle]) extends Geometry {
         yield intersection
 
     if (intersections.nonEmpty) {
-      val closest = intersections.min(Ordering.by((i: Intersection) => (i.point - ray.origin).length))
+      val closest = intersections.min(Ordering.by((i: RayIntersection) => i.t))//(i.point - ray.origin).length))
       Some(closest)
-    } else None
+    }
+    else None
   }
 }
 
@@ -136,7 +137,7 @@ case class Ray(origin: Vector4, dir: Vector4) {
   def transform(m: Matrix44) = {
     origin *= m
     dir *= m
-    dir.normalize()
+//    dir.normalize()
     this
   }
 }
@@ -146,7 +147,7 @@ object Ray {
 }
 
 case class Intersection(point: Vector4, normal: Vector4)
-class RayIntersection(ray: Ray, t: Float, override val normal: Vector4) extends Intersection(ray.point(t), normal) {
+class RayIntersection(val ray: Ray, val t: Float, override val normal: Vector4) extends Intersection(ray.point(t), normal) {
 //  def point = ray.point(t)
 
   override def toString = s"Intersection(t=$t, point=$point, normal=$normal)"
