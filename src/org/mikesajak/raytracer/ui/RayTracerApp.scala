@@ -89,17 +89,30 @@ object RayTracerApp extends JFXApp {
       synchronized {
         list ::= (x, y, color)
         count += 1
-        if (count > 1000)
-          flush()
+        if (count > 1000) {
+          val tmpList = list
+          list = List()
+          flush(tmpList)
+        }
       }
 //      println(s"setPixel($x, $y, $color/${color.argb}})")
     }
 
     def flush(): Unit = {
-      val tmpList = list
-      list = List()
+      val pixels =
+        synchronized {
+          val tmpList = list
+          list = List()
+          tmpList
+        }
+      flush(pixels)
+    }
+
+
+    def flush(pixels: List[(Int, Int, Color4)]): Unit = {
+
       Platform.runLater {
-        for ((x, y, color) <- tmpList)
+        for ((x, y, color) <- pixels)
         pixelWriter.setArgb(x, y, color.argb)
       }
     }
