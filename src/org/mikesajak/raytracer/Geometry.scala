@@ -81,7 +81,7 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
 
 case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
   def normal = ((p2 - p1) cross (p3 - p1)).normalize()
-  override def intersect(ray: Ray): Option[RayIntersection] = {
+  def intersect2(ray: Ray): Option[RayIntersection] = {
     val n = normal
     val rayAngleCos = ray.dir * n
     if (rayAngleCos > 0) {
@@ -93,7 +93,78 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
     }
     else None
   }
+
+  val EPSILON = 0.000001f
+
+  override def intersect(ray: Ray): Option[RayIntersection] = {
+    // Moller-Trumbore algorithm
+
+    // find vectors for two edges sharing p1
+    val e1 = p2 - p1
+    val e2 = p3 - p1
+
+    // start calculating determinant - also used to calculate u parameter
+    val p = ray.dir cross e2
+
+    // if determinant is near zero, ray lies in plane of the triangle
+    val det = e1 * p
+
+    // not culling
+    if (det > -EPSILON && det < EPSILON) None // the intersection lies outside of the triangle
+    else {
+      val invDet = 1.0f / det
+
+      // calculate distance from v1 to ray origin
+      val t = ray.origin - p1
+
+      // calculate u parameter and test bound
+      val u = t * p * invDet
+
+      // the intersection lays outside of the triangle
+
+      if (u < 0.0f || u > 1.0f) None
+      else {
+        // prepare to test v parameter
+        val q = t cross e1
+
+        // calculate v parameter and test bound
+        val v = ray.dir * q * invDet
+
+        // the intersection lies outside of the triangle
+        if (v < 0.0f || u + v > 1.0f) None
+        else {
+          val t = e2 * q * invDet
+
+          if (t > EPSILON) // ray intersection
+            Some(new RayIntersection(ray, t, normal))
+          else None
+        }
+      }
+    }
+  }
+
+//  def barycentricCoordinates(p: Vector4): (Float, Float) = {
+//    val v0 = p3 - p1
+//    val v1 = p2 - p1
+//    val v2 = p - p1
+//
+//    // dot products
+//    val dot00 = v0 * v0
+//    val dot01 = v0 * v1
+//    val dot02 = v0 * v2
+//    val dot11 = v1 * v1
+//    val dot12 = v1 * v2
+//
+//    // barycentric coordinates
+//    val invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01)
+//    val u = (dot11 * dot02 - dot01 * dot12) * invDenom
+//    val v = (dot00 * dot12 - dot01 * dot02) * invDenom
+//    (u, v)
+//  }
+
 }
+
+
 
 case class IndexedTriangle(vertices: Seq[Vector4], i1: Int, i2: Int, i3: Int) extends Geometry {
   def p1 = vertices(i1)
