@@ -54,6 +54,21 @@ case class Color4(var r: Float, var g: Float, var b: Float, var a: Float = 1.0f)
   }
   def *(c: Color4) = new Color4(this) *= c
 
+  def addScaled(c: Color4, s: Float) = {
+    r += c.r * s
+    g += c.g * s
+    b += c.b * s
+    clamp()
+  }
+
+  def addScaled(c: Color4, s: Color4) = {
+    r += c.r * s.r
+    g += c.g * s.g
+    b += c.b * s.b
+    a += c.a * s.a
+    clamp()
+  }
+
   def clamp() = {
     if (r < 0) r = 0
     else if (r > 1) r = 1

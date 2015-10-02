@@ -25,10 +25,6 @@ class RayTracer {
 
     val stats = new Stats
     pixels.par foreach { case pixel@(x,y) =>
-      if (x == config.size._1/2 && y == config.size._2/2) {
-        println("center")
-      }
-
       val startTime = System.nanoTime()
       val ray = mkRay(x,y, config.size._1, config.size._2, scene.camera)
       val rayTime = System.nanoTime()
@@ -67,7 +63,7 @@ class RayTracer {
     val halfHeight = height/2.0f
 
 //    val alpha = scala.math.tan(fovx/2).toFloat * ((j - halfWidth)/halfWidth)
-    var alpha = scala.math.tan(fovx/2).toFloat * ((halfWidth - j)/halfWidth)
+    var alpha = scala.math.tan(fovx/2).toFloat * ((j - halfWidth)/halfWidth)
     var beta = scala.math.tan(fovy/2).toFloat * ((halfHeight - i) / halfHeight)
 
     val w = (camera.eye - camera.at).normalize()
@@ -119,13 +115,13 @@ class RayTracer {
 
         val visible = intersect(ray, scene) == None
         if (visible) {
-          val lightIntensity = light.colorIntensity(intersection.point)
           val pointColor = Color4(0,0,0)
 
           // add diffuse term
           val lightDirCosine = dirToLight * intersection.normal
           if (lightDirCosine > 0)
-            pointColor += model.material.diffuse * lightDirCosine
+//            pointColor += model.material.diffuse * lightDirCosine
+            pointColor.addScaled(model.material.diffuse, lightDirCosine)
 
           // add specular term
           val halfVec = (dirToLight - cameraRay.dir).normalize()
@@ -134,16 +130,18 @@ class RayTracer {
           val halfVecNCosine = (halfVec * intersection.normal)
           if (halfVecNCosine > 0) {
             val shininess = scala.math.pow(halfVecNCosine, model.material.shininess).toFloat
-            pointColor += model.material.specular * shininess
+//            pointColor += model.material.specular * shininess
+              pointColor.addScaled(model.material.specular, shininess)
           }
 
-          colorAcc += lightIntensity * pointColor
-        } else colorAcc
+          val lightIntensity = light.colorIntensity(intersection.point)
+//          colorAcc += lightIntensity * pointColor
+          colorAcc.addScaled(pointColor, lightIntensity)
+        }
+
+        colorAcc
     }
 
-    if (shadingColor.r < 0.1 || shadingColor.g < 0.1 || shadingColor.b < 0.1) {
-//      println("dupa")
-    }
     constantColor += shadingColor
   }
 
