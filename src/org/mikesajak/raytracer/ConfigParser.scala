@@ -282,7 +282,7 @@ object ConfigParser {
 
     def addTransform(t: Transform) = {
       println(s"Add transform: $t")
-      curTransform = Transform.combine(curTransform, t)
+      curTransform = curTransform combine t
     }
 
     def transform = new Transform(curTransform)

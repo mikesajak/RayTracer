@@ -7,13 +7,12 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
                a10: Float, a11: Float, a12: Float, a13: Float,
                a20: Float, a21: Float, a22: Float, a23: Float,
                a30: Float, a31: Float, a32: Float, a33: Float) {
-  def data = Array(
+  val data = Array(
     Vector4(a00, a01, a02, a03),
     Vector4(a10, a11, a12, a13),
     Vector4(a20, a21, a22, a23),
     Vector4(a30, a31, a32, a33)
   )
-  transpose()
 
   def this(a: Float) = this(a,a,a,a,  a,a,a,a,  a,a,a,a,  a,a,a,a)
 
@@ -33,6 +32,9 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
 
   def apply(idx: Int) = data(idx)
   def update(idx: Int, col: Vector4) = data(idx) := col
+
+  def apply(col: Int, row: Int) = data(col)(row)
+  def update(col: Int, row: Int, value: Float) = data(col)(row) = value
   def at(idx: Int) = apply(idx)
 
   def set(a00: Float, a01: Float, a02: Float, a03: Float,
@@ -43,7 +45,6 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
     data(1).set(a10, a11, a12, a13)
     data(2).set(a20, a21, a22, a23)
     data(3).set(a30, a31, a32, a33)
-    transpose()
     this
   }
 
@@ -202,7 +203,7 @@ object Matrix44 {
     for (i <- 0 until 4;
          j <- 0 until 4;
          k <- 0 until 4) {
-      r(i)(j) = m1(i)(j) * m2(i)(k)
+      r(i)(j) += m1(i)(k) * m2(j)(k)
     }
     r
   }
@@ -222,7 +223,7 @@ object Matrix44 {
 
   def scale(s: Vector4): Matrix44 = scale(s.x, s.y, s.z)
   def scale(sx: Float, sy: Float, sz: Float) =
-    Matrix44(sx,  0,  0,  0,
+    Matrix44(sx, 0,  0,  0,
              0, sy,  0,  0,
              0,  0, sz,  0,
              0,  0,  0,  1)
@@ -251,6 +252,6 @@ object Matrix44 {
     Matrix44(u.x, u.y, u.z, -(eye*u),
              v.x, v.y, v.z, -(eye*v),
              w.x, w.y, w.z, -(eye*w),
-             0,   0,   0,     1)
+               0,   0,   0,        1)
   }
 }

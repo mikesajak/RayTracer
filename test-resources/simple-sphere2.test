@@ -28,4 +28,6 @@ shininess 20
 # Though it's probably simpler you just implement this, for later 
 # parts of the assignment.
 
+translate -1 0 0
+
 sphere 0 0 0 1
