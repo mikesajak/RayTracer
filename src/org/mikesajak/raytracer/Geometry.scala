@@ -80,21 +80,14 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
 }
 
 case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
-  def normal = ((p2 - p1) cross (p3 - p1)).normalize()
-  def intersect2(ray: Ray): Option[RayIntersection] = {
-    val n = normal
-    val rayAngleCos = ray.dir * n
-    if (rayAngleCos > 0) {
-      // plane: P*n - A*n = 0
-      // ray = P = P0 + P1*t
-      val tPlane = (p1 * n - ray.origin * n) / (ray.dir * n)
-      val pPlane = ray.point(tPlane)
-      None
-    }
-    else None
+  def normal = {
+    //((p2 - p1) cross (p3 - p1)).normalize()
+    val n = p2 - p1
+    n.crossAndSet(p3 - p1)
+    n.normalize()
   }
 
-  val EPSILON = 0.000001f
+  val EPSILON = 0.00001f
 
   override def intersect(ray: Ray): Option[RayIntersection] = {
     // Moller-Trumbore algorithm
@@ -133,34 +126,15 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
         // the intersection lies outside of the triangle
         if (v < 0.0f || u + v > 1.0f) None
         else {
-          val t = e2 * q * invDet
+          val tRay = e2 * q * invDet
 
-          if (t > EPSILON) // ray intersection
-            Some(new RayIntersection(ray, t, normal))
+          if (tRay > EPSILON) // ray intersection
+            Some(new RayIntersection(ray, tRay, normal))
           else None
         }
       }
     }
   }
-
-//  def barycentricCoordinates(p: Vector4): (Float, Float) = {
-//    val v0 = p3 - p1
-//    val v1 = p2 - p1
-//    val v2 = p - p1
-//
-//    // dot products
-//    val dot00 = v0 * v0
-//    val dot01 = v0 * v1
-//    val dot02 = v0 * v2
-//    val dot11 = v1 * v1
-//    val dot12 = v1 * v2
-//
-//    // barycentric coordinates
-//    val invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01)
-//    val u = (dot11 * dot02 - dot01 * dot12) * invDenom
-//    val v = (dot00 * dot12 - dot01 * dot02) * invDenom
-//    (u, v)
-//  }
 
 }
 

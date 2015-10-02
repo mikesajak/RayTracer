@@ -48,7 +48,7 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
     data(0) = -data(0)
     data(1) = -data(1)
     data(2) = -data(2)
-    data(3) = -data(3)
+//    data(3) = -data(3)
     this
   }
 
@@ -56,10 +56,16 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
   def ones() = fill(1)
 
   def length = d
-  def d2 = this dot (this)
+  def d2 = (data(0) * data(0) + data(1)*data(1) + data(2)*data(2))
   def d = scala.math.sqrt(d2).toFloat
 
-  def normalize() = Vector4.normalize(this)
+  def normalize() = {
+    val invD = 1.0f / length
+    data(0) *= invD
+    data(1) *= invD
+    data(2) *= invD
+    this
+  }
 
   def +=(v: Vector4) = {
     data(0) += v.data(0)
@@ -97,10 +103,12 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
 
   def *(m: Matrix44) = new Vector4(this) *= m
 
-  def dot(v: Vector4) = x*v.x + y*v.y + z*v.z + w*v.w
+  def dot(v: Vector4) = x*v.x + y*v.y + z*v.z// + w*v.w
   def *(v: Vector4) = this dot v
 
-  def cross(v: Vector4) =
+  def cross(v: Vector4) = new Vector4(this).crossAndSet(v)
+
+  def crossAndSet(v: Vector4) =
     set(y*v.z - z*v.y,
         z*v.x - x*v.z,
         x*v.y - y*v.x,
@@ -113,10 +121,10 @@ object Vector4 {
   def apply() = new Vector4(0,0,0,0)
   def apply(x: Float, y: Float, z: Float, w: Float = 0) = new Vector4(x,y,z,w)
 
-  def normalize(v: Vector4) = v *= (1.0f / v.length)
+//  def normalize(v: Vector4) = v *= (1.0f / v.length)
   def inverse(v: Vector4) = new Vector4(v).inverse()
 
-  def cross(v1: Vector4, v2: Vector4) = new Vector4(v1).cross(v2)
+  def cross(v1: Vector4, v2: Vector4) = new Vector4(v1).crossAndSet(v2)
 
   def dist(v1: Vector4, v2: Vector4) = {
     val dx = v1.x - v2.x

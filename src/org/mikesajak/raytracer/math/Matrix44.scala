@@ -13,6 +13,7 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
     Vector4(a20, a21, a22, a23),
     Vector4(a30, a31, a32, a33)
   )
+  transpose()
 
   def this(a: Float) = this(a,a,a,a,  a,a,a,a,  a,a,a,a,  a,a,a,a)
 
@@ -26,9 +27,9 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
   def this(m: Matrix44) = this(m.data(0), m.data(1), m.data(2), m.data(3))
 
   def this() = this(1,0,0,0,
-                   0,1,0,0,
-                   0,0,1,0,
-                   0,0,0,1)
+                    0,1,0,0,
+                    0,0,1,0,
+                    0,0,0,1)
 
   def apply(idx: Int) = data(idx)
   def update(idx: Int, col: Vector4) = data(idx) := col
@@ -42,6 +43,7 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
     data(1).set(a10, a11, a12, a13)
     data(2).set(a20, a21, a22, a23)
     data(3).set(a30, a31, a32, a33)
+    transpose()
     this
   }
 
@@ -243,8 +245,8 @@ object Matrix44 {
 
   def lookAt(eye: Vector4, at: Vector4, up: Vector4) = {
     val w = (eye - at).normalize()//new Vector4(eye).normalize()
-    val u = (new Vector4(up) cross w).normalize()
-    val v = (new Vector4(w) cross u).normalize()
+    val u = (up cross w).normalize()
+    val v = (w cross u).normalize()
 
     Matrix44(u.x, u.y, u.z, -(eye*u),
              v.x, v.y, v.z, -(eye*v),

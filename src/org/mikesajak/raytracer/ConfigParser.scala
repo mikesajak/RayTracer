@@ -66,39 +66,44 @@ object ConfigParser {
     val EmptyMatch = raw"\s*".r
 
 
-    val float = raw"([-+]?\d+(?:\.\d+)?|\.\d+)".r
+    val float2 = raw"([-+]?\d+(?:\.\d+)?|\.\d+)"
+    val float = raw"([-+]?(?:(?:\d+)|(?:\d+\.\d+)|(?:\.\d+)))"
     val int = raw"(\d+)"
 
-    val SizeMatch = s"size $int $int".r
-    val MaxDepthMatch = s"maxdepth $int".r
-    val OutputMatch = raw"output (\S+)".r
+    def from(tokens: String*) =
+      (tokens.tail foldLeft tokens.head)((acc, token) => acc + "\\s+" + token).r
 
-    val CameraMatch = s"camera $float $float $float $float $float $float $float $float $float $float".r
 
-    val MaxVertsMatch = s"maxverts $int".r
-    val MaxVertNormsMatch = s"maxvertnorms $int".r
-    val VertexMatch = s"vertex $float $float $float".r
-    val VertexNormalMatch = s"vertex  $float $float $float".r
-    val TriMatch = s"tri $int $int $int".r
-    val TriNormalMatch = s"tri $int $int $int".r
+    val SizeMatch = from("size", int, int)
+    val MaxDepthMatch = from("maxdepth",int)
+    val OutputMatch = from("output", raw"(\S+)")
 
-    val SphereMatch = s"sphere $float $float $float $float".r
+    val CameraMatch = from("camera", float, float, float, float, float, float, float, float, float, float)
+
+    val MaxVertsMatch = from("maxverts", int)
+    val MaxVertNormsMatch = from("maxvertnorms", int)
+    val VertexMatch = from("vertex", float, float, float)
+    val VertexNormalMatch = from("vertexnormal", float, float, float)
+    val TriMatch = from("tri", int, int, int)
+    val TriNormalMatch = from("trinormal", int, int, int)
+
+    val SphereMatch = from("sphere", float, float, float, float)
 
     val PushTransformMatch = "pushTransform".r
     val PopTransformMatch = "popTransform".r
-    val TranslationMatch = s"translate $float $float$float".r
-    val RotationMatch = s"rotate $float $float $float $float".r
-    val ScaleMatch = s"scale $float $float $float".r
+    val TranslationMatch = from("translate", float, float, float)
+    val RotationMatch = from("rotate", float, float, float, float)
+    val ScaleMatch = from("scale", float, float, float)
 
-    val DirLightMatch = s"directional $float $float $float $float $float $float".r
-    val PointLightMatch= s"point $float $float $float $float $float $float".r
-    val AttenuationMatch = s"attenuation $float $float $float".r
+    val DirLightMatch = from("directional", float, float, float, float, float,float)
+    val PointLightMatch= from("point", float, float, float, float, float, float)
+    val AttenuationMatch = from("attenuation", float, float, float)
 
-    val AmbientMatch = s"ambient $float $float $float".r
-    val DiffuseMatch = s"diffuse $float $float $float".r
-    val SpecularMatch = s"specular $float $float $float".r
-    val ShininessMatch = s"shininess $float".r
-    val EmissionMatch = s"emission $float $float $float".r
+    val AmbientMatch = from("ambient", float, float, float)
+    val DiffuseMatch = from("diffuse", float, float, float)
+    val SpecularMatch = from("specular", float, float, float)
+    val ShininessMatch = from("shininess", float)
+    val EmissionMatch = from("emission", float, float, float)
 
     for (rawLine <- input.getLines();
          line = rawLine.trim) {
@@ -161,7 +166,7 @@ object ConfigParser {
           val s = Vector4(sx.toFloat, sy.toFloat, sz.toFloat)
           sceneBuilder.addTransform(Transform.scale(s))
 
-        case _ => println(s"No match for line: $line")
+        case _ => println(s"*** No match for line: $line")
 
       }
     }

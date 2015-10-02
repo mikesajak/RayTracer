@@ -71,13 +71,17 @@ class RayTracer {
     var beta = scala.math.tan(fovy/2).toFloat * ((halfHeight - i) / halfHeight)
 
     val w = (camera.eye - camera.at).normalize()
-    val u = (new Vector4(camera.up) cross w).normalize()
-    val v = new Vector4(w) cross u
+    val u = (camera.up cross w).normalize()
+    val v = w cross u
 
     u *= alpha
     v *= beta
 
-    val dir = (u + v - w).normalize()
+//    val dir = (u + v - w).normalize()
+    val dir = u + v
+    dir -= w
+    dir.normalize()
+
     Ray(camera.eye, dir)
   }
 
@@ -117,6 +121,7 @@ class RayTracer {
         if (visible) {
           val lightIntensity = light.colorIntensity(intersection.point)
           val pointColor = Color4(0,0,0)
+
           // add diffuse term
           val lightDirCosine = dirToLight * intersection.normal
           if (lightDirCosine > 0)
