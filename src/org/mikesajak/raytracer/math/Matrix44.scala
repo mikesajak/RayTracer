@@ -7,44 +7,60 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
                a10: Float, a11: Float, a12: Float, a13: Float,
                a20: Float, a21: Float, a22: Float, a23: Float,
                a30: Float, a31: Float, a32: Float, a33: Float) {
-  val data = Array(
-    Vector4(a00, a01, a02, a03),
-    Vector4(a10, a11, a12, a13),
-    Vector4(a20, a21, a22, a23),
-    Vector4(a30, a31, a32, a33)
-  )
+  val data = Array[Float](a00, a01, a02, a03,
+                          a10, a11, a12, a13,
+                          a20, a21, a22, a23,
+                          a30, a31, a32, a33)
 
   def this(a: Float) = this(a,a,a,a,  a,a,a,a,  a,a,a,a,  a,a,a,a)
 
-  def this(c0: Vector4, c1: Vector4, c2: Vector4, c3: Vector4) =
-    this(c0.x, c0.y, c0.z, c0.w,
-         c1.x, c1.y, c1.z, c1.w,
-         c2.x, c2.y, c2.z, c2.w,
-         c3.x, c3.y, c3.z, c3.w)
+  def this(r0: Vector4, r1: Vector4, r2: Vector4, r3: Vector4) =
+    this(r0.x, r0.y, r0.z, r0.w,
+         r1.x, r1.y, r1.z, r1.w,
+         r2.x, r2.y, r2.z, r2.w,
+         r3.x, r3.y, r3.z, r3.w)
+//    this(c0.x, c1.x, c2.x, c3.w,
+//         c0.y, c1.y, c2.y, c3.w,
+//         c0.z, c1.z, c2.z, c3.w,
+//         c0.w, c1.w, c2.w, c3.w)
 
 
-  def this(m: Matrix44) = this(m.data(0), m.data(1), m.data(2), m.data(3))
+  def this(m: Matrix44) = this(m.data(0),  m.data(1),  m.data(2),  m.data(3),
+                               m.data(4),  m.data(5),  m.data(6),  m.data(7),
+                               m.data(8),  m.data(9),  m.data(10), m.data(11),
+                               m.data(12), m.data(13), m.data(14), m.data(15))
 
   def this() = this(1,0,0,0,
                     0,1,0,0,
                     0,0,1,0,
                     0,0,0,1)
 
-  def apply(idx: Int) = data(idx)
-  def update(idx: Int, col: Vector4) = data(idx) := col
+//  def apply(col: Int) = {
+//    val ofs = col*4
+//    Vector4(data(col), data(4+ofs), data(8+ofs), data(12+ofs))
+//  }
+//
+//  def update(colIdx: Int, col: Vector4) = {
+//    val ofs = colIdx*4
+//    data(4+ofs) = col(0)
+//    data(4+ofs) = col(1)
+//    data(8+ofs) = col(2)
+//    data(12+ofs) = col(3)
+//  }
 
-  def apply(col: Int, row: Int) = data(col)(row)
-  def update(col: Int, row: Int, value: Float) = data(col)(row) = value
-  def at(idx: Int) = apply(idx)
+  def apply(col: Int, row: Int) = data(4*col + row)
+  def update(col: Int, row: Int, value: Float) = data(4*col+row) = value
+  def at(col: Int, row: Int) = apply(col, row)
+//  def at(idx: Int) = apply(idx)
 
   def set(a00: Float, a01: Float, a02: Float, a03: Float,
           a10: Float, a11: Float, a12: Float, a13: Float,
           a20: Float, a21: Float, a22: Float, a23: Float,
           a30: Float, a31: Float, a32: Float, a33: Float) = {
-    data(0).set(a00, a01, a02, a03)
-    data(1).set(a10, a11, a12, a13)
-    data(2).set(a20, a21, a22, a23)
-    data(3).set(a30, a31, a32, a33)
+    data(0)  = a00; data(1)  = a01; data(2)  = a02; data(3)  = a03
+    data(4)  = a10; data(5)  = a11; data(6)  = a12; data(7)  = a13
+    data(8)  = a20; data(9)  = a21; data(10) = a22; data(11) = a23
+    data(12) = a30; data(13) = a31; data(14) = a32; data(15) = a33
     this
   }
 
@@ -54,7 +70,10 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
         c2.x, c2.y, c2.z, c2.w,
         c3.x, c3.y, c3.z, c3.w)
 
-  def set(m: Matrix44): Matrix44 = set(m.data(0), m.data(1), m.data(2), m.data(3))
+  def set(m: Matrix44): Matrix44 = {
+    Array.copy(m.data, 0, data, 0, 16)
+    this
+  }
 
   def :=(m: Matrix44) = set(m)
   def :=(t: Tuple4[Vector4, Vector4, Vector4, Vector4]) = set(t._1, t._2, t._3, t._4)
@@ -64,48 +83,40 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
         t._9,  t._10,  t._11, t._12,
         t._13, t._14,  t._15, t._16)
 
-  def fill(a: Float) = {
-    data(0).fill(a)
-    data(1).fill(a)
-    data(2).fill(a)
-    data(3).fill(a)
-    this
-  }
+  def fill(a: Float) = set(a,a,a,a, a,a,a,a, a,a,a,a, a,a,a,a)
 
   def zero() = fill(0)
   def ones() = fill(1)
 
-  def identity() = {
-    data(0).set(1,0,0,0)
-    data(1).set(0,1,0,0)
-    data(2).set(0,0,1,0)
-    data(3).set(0,0,0,1)
-    this
-  }
+  def identity() =
+    set(1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,0,0,1)
 
   def +=(m: Matrix44) = {
-    data(0) += m.data(0)
-    data(1) += m.data(1)
-    data(2) += m.data(2)
-    data(3) += m.data(3)
+    data(0)  += m.data(0);  data(1)  += m.data(1);  data(2)  += m.data(2);  data(3)  += m.data(3)
+    data(4)  += m.data(4);  data(5)  += m.data(5);  data(6)  += m.data(6);  data(7)  += m.data(7)
+    data(8)  += m.data(8);  data(9)  += m.data(9);  data(10) += m.data(10); data(11) += m.data(11)
+    data(12) += m.data(12); data(13) += m.data(13); data(14) += m.data(14); data(15) += m.data(15)
     this
   }
   def +(m: Matrix44) = new Matrix44(this) += m
 
   def -=(m: Matrix44) = {
-    data(0) -= m.data(0)
-    data(1) -= m.data(1)
-    data(2) -= m.data(2)
-    data(3) -= m.data(3)
+    data(0)  -= m.data(0);  data(1)  -= m.data(1);  data(2)  -= m.data(2);  data(3)  -= m.data(3)
+    data(4)  -= m.data(4);  data(5)  -= m.data(5);  data(6)  -= m.data(6);  data(7)  -= m.data(7)
+    data(8)  -= m.data(8);  data(9)  -= m.data(9);  data(10) -= m.data(10); data(11) -= m.data(11)
+    data(12) -= m.data(12); data(13) -= m.data(13); data(14) -= m.data(14); data(15) -= m.data(15)
     this
   }
   def -(m: Matrix44) = new Matrix44(this) -= m
 
   def *=(a: Float) = {
-    data(0) *= a
-    data(1) *= a
-    data(2) *= a
-    data(3) *= a
+    data(0)  *= a; data(1)  *= a; data(2)  *= a; data(3)  *= a
+    data(4)  *= a; data(5)  *= a; data(6)  *= a; data(7)  *= a
+    data(8)  *= a; data(9)  *= a; data(10) *= a; data(11) *= a
+    data(12) *= a; data(13) *= a; data(14) *= a; data(15) *= a
     this
   }
   def *(a: Float) = new Matrix44(this) *= a
@@ -116,9 +127,9 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
 
   def transpose() = {
     def swap(ax: Int, ay: Int, bx: Int, by: Int) = {
-      val tmp = data(ay)(ax)
-      data(ay)(ax) = data(by)(bx)
-      data(by)(bx) = tmp
+      val tmp = this(ay, ax)
+      this(ay, ax) = this(by, bx)
+      this(by, bx) = tmp
     }
 
     swap(0,1, 1,0)
@@ -133,47 +144,45 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
     this
   }
 
-  def inverse() = {
-    data(0)(0) = data(1)(2)*data(2)(3)*data(3)(1) - data(1)(3)*data(2)(2)*data(3)(1) + data(1)(3)*data(2)(1)*data(3)(2) - data(1)(1)*data(2)(3)*data(3)(2) - data(1)(2)*data(2)(1)*data(3)(3) + data(1)(1)*data(2)(2)*data(3)(3)
-    data(0)(1) = data(0)(3)*data(2)(2)*data(3)(1) - data(0)(2)*data(2)(3)*data(3)(1) - data(0)(3)*data(2)(1)*data(3)(2) + data(0)(1)*data(2)(3)*data(3)(2) + data(0)(2)*data(2)(1)*data(3)(3) - data(0)(1)*data(2)(2)*data(3)(3)
-    data(0)(2) = data(0)(2)*data(1)(3)*data(3)(1) - data(0)(3)*data(1)(2)*data(3)(1) + data(0)(3)*data(1)(1)*data(3)(2) - data(0)(1)*data(1)(3)*data(3)(2) - data(0)(2)*data(1)(1)*data(3)(3) + data(0)(1)*data(1)(2)*data(3)(3)
-    data(0)(3) = data(0)(3)*data(1)(2)*data(2)(1) - data(0)(2)*data(1)(3)*data(2)(1) - data(0)(3)*data(1)(1)*data(2)(2) + data(0)(1)*data(1)(3)*data(2)(2) + data(0)(2)*data(1)(1)*data(2)(3) - data(0)(1)*data(1)(2)*data(2)(3)
-    data(1)(0) = data(1)(3)*data(2)(2)*data(3)(0) - data(1)(2)*data(2)(3)*data(3)(0) - data(1)(3)*data(2)(0)*data(3)(2) + data(1)(0)*data(2)(3)*data(3)(2) + data(1)(2)*data(2)(0)*data(3)(3) - data(1)(0)*data(2)(2)*data(3)(3)
-    data(1)(1) = data(0)(2)*data(2)(3)*data(3)(0) - data(0)(3)*data(2)(2)*data(3)(0) + data(0)(3)*data(2)(0)*data(3)(2) - data(0)(0)*data(2)(3)*data(3)(2) - data(0)(2)*data(2)(0)*data(3)(3) + data(0)(0)*data(2)(2)*data(3)(3)
-    data(1)(2) = data(0)(3)*data(1)(2)*data(3)(0) - data(0)(2)*data(1)(3)*data(3)(0) - data(0)(3)*data(1)(0)*data(3)(2) + data(0)(0)*data(1)(3)*data(3)(2) + data(0)(2)*data(1)(0)*data(3)(3) - data(0)(0)*data(1)(2)*data(3)(3)
-    data(1)(3) = data(0)(2)*data(1)(3)*data(2)(0) - data(0)(3)*data(1)(2)*data(2)(0) + data(0)(3)*data(1)(0)*data(2)(2) - data(0)(0)*data(1)(3)*data(2)(2) - data(0)(2)*data(1)(0)*data(2)(3) + data(0)(0)*data(1)(2)*data(2)(3)
-    data(2)(0) = data(1)(1)*data(2)(3)*data(3)(0) - data(1)(3)*data(2)(1)*data(3)(0) + data(1)(3)*data(2)(0)*data(3)(1) - data(1)(0)*data(2)(3)*data(3)(1) - data(1)(1)*data(2)(0)*data(3)(3) + data(1)(0)*data(2)(1)*data(3)(3)
-    data(2)(1) = data(0)(3)*data(2)(1)*data(3)(0) - data(0)(1)*data(2)(3)*data(3)(0) - data(0)(3)*data(2)(0)*data(3)(1) + data(0)(0)*data(2)(3)*data(3)(1) + data(0)(1)*data(2)(0)*data(3)(3) - data(0)(0)*data(2)(1)*data(3)(3)
-    data(2)(2) = data(0)(1)*data(1)(3)*data(3)(0) - data(0)(3)*data(1)(1)*data(3)(0) + data(0)(3)*data(1)(0)*data(3)(1) - data(0)(0)*data(1)(3)*data(3)(1) - data(0)(1)*data(1)(0)*data(3)(3) + data(0)(0)*data(1)(1)*data(3)(3)
-    data(2)(3) = data(0)(3)*data(1)(1)*data(2)(0) - data(0)(1)*data(1)(3)*data(2)(0) - data(0)(3)*data(1)(0)*data(2)(1) + data(0)(0)*data(1)(3)*data(2)(1) + data(0)(1)*data(1)(0)*data(2)(3) - data(0)(0)*data(1)(1)*data(2)(3)
-    data(3)(0) = data(1)(2)*data(2)(1)*data(3)(0) - data(1)(1)*data(2)(2)*data(3)(0) - data(1)(2)*data(2)(0)*data(3)(1) + data(1)(0)*data(2)(2)*data(3)(1) + data(1)(1)*data(2)(0)*data(3)(2) - data(1)(0)*data(2)(1)*data(3)(2)
-    data(3)(1) = data(0)(1)*data(2)(2)*data(3)(0) - data(0)(2)*data(2)(1)*data(3)(0) + data(0)(2)*data(2)(0)*data(3)(1) - data(0)(0)*data(2)(2)*data(3)(1) - data(0)(1)*data(2)(0)*data(3)(2) + data(0)(0)*data(2)(1)*data(3)(2)
-    data(3)(2) = data(0)(2)*data(1)(1)*data(3)(0) - data(0)(1)*data(1)(2)*data(3)(0) - data(0)(2)*data(1)(0)*data(3)(1) + data(0)(0)*data(1)(2)*data(3)(1) + data(0)(1)*data(1)(0)*data(3)(2) - data(0)(0)*data(1)(1)*data(3)(2)
-    data(3)(3) = data(0)(1)*data(1)(2)*data(2)(0) - data(0)(2)*data(1)(1)*data(2)(0) + data(0)(2)*data(1)(0)*data(2)(1) - data(0)(0)*data(1)(2)*data(2)(1) - data(0)(1)*data(1)(0)*data(2)(2) + data(0)(0)*data(1)(1)*data(2)(2)
-
-    this *= 1/det()
-  }
-
-  def det() = {
-    data(0)(3)*data(1)(2)*data(2)(1)*data(3)(0) - data(0)(2)*data(1)(3)*data(2)(1)*data(3)(0) - data(0)(3)*data(1)(1)*data(2)(2)*data(3)(0) + data(0)(1)*data(1)(3)*data(2)(2)*data(3)(0)+
-    data(0)(2)*data(1)(1)*data(2)(3)*data(3)(0) - data(0)(1)*data(1)(2)*data(2)(3)*data(3)(0) - data(0)(3)*data(1)(2)*data(2)(0)*data(3)(1) + data(0)(2)*data(1)(3)*data(2)(0)*data(3)(1)+
-    data(0)(3)*data(1)(0)*data(2)(2)*data(3)(1) - data(0)(0)*data(1)(3)*data(2)(2)*data(3)(1) - data(0)(2)*data(1)(0)*data(2)(3)*data(3)(1) + data(0)(0)*data(1)(2)*data(2)(3)*data(3)(1)+
-    data(0)(3)*data(1)(1)*data(2)(0)*data(3)(2) - data(0)(1)*data(1)(3)*data(2)(0)*data(3)(2) - data(0)(3)*data(1)(0)*data(2)(1)*data(3)(2) + data(0)(0)*data(1)(3)*data(2)(1)*data(3)(2)+
-    data(0)(1)*data(1)(0)*data(2)(3)*data(3)(2) - data(0)(0)*data(1)(1)*data(2)(3)*data(3)(2) - data(0)(2)*data(1)(1)*data(2)(0)*data(3)(3) + data(0)(1)*data(1)(2)*data(2)(0)*data(3)(3)+
-    data(0)(2)*data(1)(0)*data(2)(1)*data(3)(3) - data(0)(0)*data(1)(2)*data(2)(1)*data(3)(3) - data(0)(1)*data(1)(0)*data(2)(2)*data(3)(3) + data(0)(0)*data(1)(1)*data(2)(2)*data(3)(3)
-  }
+//  def inverse() = {
+//    data(0)(0) = data(1)(2)*data(2)(3)*data(3)(1) - data(1)(3)*data(2)(2)*data(3)(1) + data(1)(3)*data(2)(1)*data(3)(2) - data(1)(1)*data(2)(3)*data(3)(2) - data(1)(2)*data(2)(1)*data(3)(3) + data(1)(1)*data(2)(2)*data(3)(3)
+//    data(0)(1) = data(0)(3)*data(2)(2)*data(3)(1) - data(0)(2)*data(2)(3)*data(3)(1) - data(0)(3)*data(2)(1)*data(3)(2) + data(0)(1)*data(2)(3)*data(3)(2) + data(0)(2)*data(2)(1)*data(3)(3) - data(0)(1)*data(2)(2)*data(3)(3)
+//    data(0)(2) = data(0)(2)*data(1)(3)*data(3)(1) - data(0)(3)*data(1)(2)*data(3)(1) + data(0)(3)*data(1)(1)*data(3)(2) - data(0)(1)*data(1)(3)*data(3)(2) - data(0)(2)*data(1)(1)*data(3)(3) + data(0)(1)*data(1)(2)*data(3)(3)
+//    data(0)(3) = data(0)(3)*data(1)(2)*data(2)(1) - data(0)(2)*data(1)(3)*data(2)(1) - data(0)(3)*data(1)(1)*data(2)(2) + data(0)(1)*data(1)(3)*data(2)(2) + data(0)(2)*data(1)(1)*data(2)(3) - data(0)(1)*data(1)(2)*data(2)(3)
+//    data(1)(0) = data(1)(3)*data(2)(2)*data(3)(0) - data(1)(2)*data(2)(3)*data(3)(0) - data(1)(3)*data(2)(0)*data(3)(2) + data(1)(0)*data(2)(3)*data(3)(2) + data(1)(2)*data(2)(0)*data(3)(3) - data(1)(0)*data(2)(2)*data(3)(3)
+//    data(1)(1) = data(0)(2)*data(2)(3)*data(3)(0) - data(0)(3)*data(2)(2)*data(3)(0) + data(0)(3)*data(2)(0)*data(3)(2) - data(0)(0)*data(2)(3)*data(3)(2) - data(0)(2)*data(2)(0)*data(3)(3) + data(0)(0)*data(2)(2)*data(3)(3)
+//    data(1)(2) = data(0)(3)*data(1)(2)*data(3)(0) - data(0)(2)*data(1)(3)*data(3)(0) - data(0)(3)*data(1)(0)*data(3)(2) + data(0)(0)*data(1)(3)*data(3)(2) + data(0)(2)*data(1)(0)*data(3)(3) - data(0)(0)*data(1)(2)*data(3)(3)
+//    data(1)(3) = data(0)(2)*data(1)(3)*data(2)(0) - data(0)(3)*data(1)(2)*data(2)(0) + data(0)(3)*data(1)(0)*data(2)(2) - data(0)(0)*data(1)(3)*data(2)(2) - data(0)(2)*data(1)(0)*data(2)(3) + data(0)(0)*data(1)(2)*data(2)(3)
+//    data(2)(0) = data(1)(1)*data(2)(3)*data(3)(0) - data(1)(3)*data(2)(1)*data(3)(0) + data(1)(3)*data(2)(0)*data(3)(1) - data(1)(0)*data(2)(3)*data(3)(1) - data(1)(1)*data(2)(0)*data(3)(3) + data(1)(0)*data(2)(1)*data(3)(3)
+//    data(2)(1) = data(0)(3)*data(2)(1)*data(3)(0) - data(0)(1)*data(2)(3)*data(3)(0) - data(0)(3)*data(2)(0)*data(3)(1) + data(0)(0)*data(2)(3)*data(3)(1) + data(0)(1)*data(2)(0)*data(3)(3) - data(0)(0)*data(2)(1)*data(3)(3)
+//    data(2)(2) = data(0)(1)*data(1)(3)*data(3)(0) - data(0)(3)*data(1)(1)*data(3)(0) + data(0)(3)*data(1)(0)*data(3)(1) - data(0)(0)*data(1)(3)*data(3)(1) - data(0)(1)*data(1)(0)*data(3)(3) + data(0)(0)*data(1)(1)*data(3)(3)
+//    data(2)(3) = data(0)(3)*data(1)(1)*data(2)(0) - data(0)(1)*data(1)(3)*data(2)(0) - data(0)(3)*data(1)(0)*data(2)(1) + data(0)(0)*data(1)(3)*data(2)(1) + data(0)(1)*data(1)(0)*data(2)(3) - data(0)(0)*data(1)(1)*data(2)(3)
+//    data(3)(0) = data(1)(2)*data(2)(1)*data(3)(0) - data(1)(1)*data(2)(2)*data(3)(0) - data(1)(2)*data(2)(0)*data(3)(1) + data(1)(0)*data(2)(2)*data(3)(1) + data(1)(1)*data(2)(0)*data(3)(2) - data(1)(0)*data(2)(1)*data(3)(2)
+//    data(3)(1) = data(0)(1)*data(2)(2)*data(3)(0) - data(0)(2)*data(2)(1)*data(3)(0) + data(0)(2)*data(2)(0)*data(3)(1) - data(0)(0)*data(2)(2)*data(3)(1) - data(0)(1)*data(2)(0)*data(3)(2) + data(0)(0)*data(2)(1)*data(3)(2)
+//    data(3)(2) = data(0)(2)*data(1)(1)*data(3)(0) - data(0)(1)*data(1)(2)*data(3)(0) - data(0)(2)*data(1)(0)*data(3)(1) + data(0)(0)*data(1)(2)*data(3)(1) + data(0)(1)*data(1)(0)*data(3)(2) - data(0)(0)*data(1)(1)*data(3)(2)
+//    data(3)(3) = data(0)(1)*data(1)(2)*data(2)(0) - data(0)(2)*data(1)(1)*data(2)(0) + data(0)(2)*data(1)(0)*data(2)(1) - data(0)(0)*data(1)(2)*data(2)(1) - data(0)(1)*data(1)(0)*data(2)(2) + data(0)(0)*data(1)(1)*data(2)(2)
+//
+//    this *= 1/det()
+//  }
+//
+//  def det() = {
+//    data(0)(3)*data(1)(2)*data(2)(1)*data(3)(0) - data(0)(2)*data(1)(3)*data(2)(1)*data(3)(0) - data(0)(3)*data(1)(1)*data(2)(2)*data(3)(0) + data(0)(1)*data(1)(3)*data(2)(2)*data(3)(0)+
+//    data(0)(2)*data(1)(1)*data(2)(3)*data(3)(0) - data(0)(1)*data(1)(2)*data(2)(3)*data(3)(0) - data(0)(3)*data(1)(2)*data(2)(0)*data(3)(1) + data(0)(2)*data(1)(3)*data(2)(0)*data(3)(1)+
+//    data(0)(3)*data(1)(0)*data(2)(2)*data(3)(1) - data(0)(0)*data(1)(3)*data(2)(2)*data(3)(1) - data(0)(2)*data(1)(0)*data(2)(3)*data(3)(1) + data(0)(0)*data(1)(2)*data(2)(3)*data(3)(1)+
+//    data(0)(3)*data(1)(1)*data(2)(0)*data(3)(2) - data(0)(1)*data(1)(3)*data(2)(0)*data(3)(2) - data(0)(3)*data(1)(0)*data(2)(1)*data(3)(2) + data(0)(0)*data(1)(3)*data(2)(1)*data(3)(2)+
+//    data(0)(1)*data(1)(0)*data(2)(3)*data(3)(2) - data(0)(0)*data(1)(1)*data(2)(3)*data(3)(2) - data(0)(2)*data(1)(1)*data(2)(0)*data(3)(3) + data(0)(1)*data(1)(2)*data(2)(0)*data(3)(3)+
+//    data(0)(2)*data(1)(0)*data(2)(1)*data(3)(3) - data(0)(0)*data(1)(2)*data(2)(1)*data(3)(3) - data(0)(1)*data(1)(0)*data(2)(2)*data(3)(3) + data(0)(0)*data(1)(1)*data(2)(2)*data(3)(3)
+//  }
 
   override def toString =
-    s"[${at(0)} ${at(1)} ${at(2)} ${at(3)}]"
+    s"[[${at(0,0)}, ${at(1,0)}, ${at(2,0)}, ${at(3,0)}], " +
+    s"[${at(0,1)}, ${at(1,1)}, ${at(2,1)}, ${at(3,1)}], " +
+    s"[${at(0,2)}, ${at(1,2)}, ${at(2,2)}, ${at(3,2)}], " +
+    s"[${at(0,3)}, ${at(1,3)}, ${at(2,3)}, ${at(3,3)}]]"
 }
 
 object Matrix44 {
   def apply() = new Matrix44()
-
-  def apply(a: Float) = new Matrix44(a,a,a,a,
-                                      a,a,a,a,
-                                      a,a,a,a,
-                                      a,a,a,a)
 
   def apply(a00: Float, a01: Float, a02: Float, a03: Float,
             a10: Float, a11: Float, a12: Float, a13: Float,
@@ -185,10 +194,19 @@ object Matrix44 {
                  a30, a31, a32, a33)
 
   def apply(c0: Vector4, c1: Vector4, c2: Vector4, c3: Vector4) =
-    new Matrix44(c0.x, c1.x, c2.x, c3.x,
-                 c0.y, c1.y, c2.y, c3.y,
-                 c0.z, c1.z, c2.z, c3.z,
-                 c0.w, c1.w, c2.w, c3.w)
+    new Matrix44(c0, c1, c2, c3)
+
+  def fill(a: Float) = new Matrix44(a,a,a,a,
+                                    a,a,a,a,
+                                    a,a,a,a,
+                                    a,a,a,a)
+
+  def tabulate(f: (Int, Int) => Float) =
+    new Matrix44(f(0,0), f(1,0), f(2,0), f(3,0),
+                 f(0,1), f(1,1), f(2,1), f(3,1),
+                 f(0,2), f(1,2), f(2,2), f(3,2),
+                 f(0,3), f(1,3), f(2,3), f(3,3))
+
 
   def identity() = new Matrix44(1,0,0,0,
                                 0,1,0,0,
@@ -196,16 +214,16 @@ object Matrix44 {
                                 0,0,0,1)
 
   def transpose(m: Matrix44) = new Matrix44(m).transpose()
-  def inverse(m: Matrix44) = new Matrix44(m).inverse()
+//  def inverse(m: Matrix44) = new Matrix44(m).inverse()
 
-  def mul(m1: Matrix44, m2: Matrix44) = {
-    val r = Matrix44(0)
-    for (i <- 0 until 4;
-         j <- 0 until 4;
-         k <- 0 until 4) {
-      r(i)(j) += m1(i)(k) * m2(j)(k)
+  def mul(M1: Matrix44, M2: Matrix44) = {
+    val R = Matrix44.fill(0)
+    for (row <- 0 until 4;
+         col <- 0 until 4;
+         i <- 0 until 4) {
+      R(col, row) += M1(i,row) * M2(col, i)
     }
-    r
+    R
   }
 
   def outerProd(v1: Vector4, v2: Vector4) =

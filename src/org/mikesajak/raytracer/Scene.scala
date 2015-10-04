@@ -9,27 +9,13 @@ class Camera(val eye: Vector4, val at: Vector4, private val up0: Vector4, val fo
   val lookAtMatrix = Matrix44.lookAt(eye, at, up0)
 
   def origin = eye
-  val ax = {
-    val ax0 = new Vector4(lookAtMatrix(0))
-    ax0(3) = 0
-    ax0
-  }
+  val ax = Vector4(lookAtMatrix(0,0), lookAtMatrix(0,1), lookAtMatrix(0,2), 0)
+  val ay = Vector4(lookAtMatrix(1,0), lookAtMatrix(1,1), lookAtMatrix(1,2), 0)
+  val az = Vector4(lookAtMatrix(2,0), lookAtMatrix(2,1), lookAtMatrix(2,2), 0)
 
-  val ay = {
-    val ay0 = new Vector4(lookAtMatrix(1))
-    ay0(3) = 0
-    ay0
-  }
-
-  val az = {
-    val az0 = new Vector4(lookAtMatrix(2))
-    az0(3) = 0
-    az0
-  }
-
-  def dir = lookAtMatrix(2)
-  def up = lookAtMatrix(1)
-  def left = lookAtMatrix(0)
+  def dir = az
+  def up = ay
+  def left = ax
 
   override def toString =
     s"Camera(eye=$eye, at=$at, up=$up0, fovy=$fovy)"
