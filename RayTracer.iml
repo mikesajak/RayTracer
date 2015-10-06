@@ -14,5 +14,6 @@
     <orderEntry type="library" name="com.typesafe.akka:akka-actor_2.11:2.3.14" level="project" />
     <orderEntry type="library" name="org.scalatest:scalatest_2.11:2.2.5" level="project" />
     <orderEntry type="library" name="com.google.guava:guava:16.0.1" level="project" />
+    <orderEntry type="library" name="org.scalacheck:scalacheck_2.11:1.12.5" level="project" />
   </component>
 </module>

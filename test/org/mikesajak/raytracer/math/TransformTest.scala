@@ -26,7 +26,12 @@ class TransformTest extends FlatSpec with Matchers {
     v1 should equal(Vector4(1,1,1,0))
   }
 
-  "Rotation" should "rotate ..." ignore {
+  "Rotation" should "rotate ax vector by 90deg around ay axis to get az vector" in {
+    val R = Matrix44.rotation(math.toRadians(-90).toFloat, Vector4(0,1,0))
+    val v = Vector4(1,0,0)
 
+    val v1 = v * R
+
+//    v1 should equal(Vector4(0,0,1) +- 1)
   }
 }

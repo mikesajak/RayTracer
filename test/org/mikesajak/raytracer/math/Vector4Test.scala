@@ -1,11 +1,12 @@
 package org.mikesajak.raytracer.math
 
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, FlatSpec}
 
 /**
  * Created by mike on 03.10.15.
  */
-class Vector4Test extends FlatSpec with Matchers {
+class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
   val EPSILON = 0.00001f
 
   "No-arg constructor" should "create vector with zeroes" in {
@@ -210,19 +211,23 @@ class Vector4Test extends FlatSpec with Matchers {
   }
 
   "operator * by scalar" should "create new vector and multiply its values by scalar" in {
-    val v1 = new Vector4(1,2,3,4)
+    forAll("x", "y", "z", "w") { (x: Float, y: Float, z: Float, w: Float) =>
+      val v1 = new Vector4(x, y, z, w)
 
-    val v2 = v1 * 10
+      val v2 = v1 * 10
 
-    v2 should equal (Vector4(10, 20, 30, 4))
+      v2 should equal(Vector4(x*10, y*10, z*10, w))
+    }
   }
 
   it should "not modify original vector" in {
-    val v1 = new Vector4(1,2,3,4)
+    forAll("x", "y", "z", "w") { (x: Float, y: Float, z: Float, w: Float) =>
+      val v1 = new Vector4(x, y, z, w)
 
-    val v2 = v1 * 10
+      val v2 = v1 * 10
 
-    v1 should equal (Vector4(1, 2, 3, 4))
+      v1 should equal(Vector4(x, y, z, w))
+    }
   }
 
   "operator * by vector (dot product)" should "calculate dot product of 2 vectors" in {
@@ -396,5 +401,17 @@ class Vector4Test extends FlatSpec with Matchers {
 
     c should equal (Vector4(0,0,0,0))
     d should equal (v2.length +- EPSILON)
+  }
+
+  it should "scale any generated vector to unit length" in {
+    forAll("x", "y", "z", "w") { (x: Float, y: Float, z: Float, w: Float) =>
+      if ((x < -EPSILON && x > EPSILON) && (y < -EPSILON || y > EPSILON) && (z < -EPSILON || z > EPSILON)) {
+        val v = Vector4(x, y, z, w)
+
+        v.normalize()
+
+        v.length should equal(1.0f +- EPSILON)
+      }
+    }
   }
 }
