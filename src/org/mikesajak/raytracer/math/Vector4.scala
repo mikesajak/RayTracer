@@ -58,13 +58,16 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
 
   def length = d
   def d2 = (data(0) * data(0) + data(1)*data(1) + data(2)*data(2))
-  def d = scala.math.sqrt(d2).toFloat
+  def d = {
+    val dd = d2
+    scala.math.sqrt(dd).toFloat
+  }
 
   def normalize() = {
-    val invD = 1.0f / length
-    data(0) *= invD
-    data(1) *= invD
-    data(2) *= invD
+    val len = length
+    data(0) /= len
+    data(1) /= len
+    data(2) /= len
     this
   }
 
@@ -115,7 +118,7 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
         x*v.y - y*v.x,
         0)
 
-  override def toString = s"[$x, $y, $z, $w]"
+  override def toString = s"[$x, $y, $z, $w](len=$length)"
 
   override def equals(o: Any) = o match {
     case v: Vector4 => x == v.x && y == v.y && z == v.z && w == v.w
@@ -125,6 +128,12 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
   override def hashCode = 31 + 7*x.hashCode + 19*y.hashCode + 23*z.hashCode + 47*w.hashCode
 
   def toTuple = (x,y,z,w)
+  def equals_+-(v: Vector4, epsilon: Float) = {
+    def equals_+-(a: Float, b: Float, epsilon: Float) = scala.math.abs(a-b) < epsilon
+
+    equals_+-(x, v.x, epsilon) && equals_+-(y, v.y, epsilon) && equals_+-(z, v.z, epsilon) && equals_+-(w, v.w, epsilon)
+  }
+
 }
 
 object Vector4 {

@@ -1,5 +1,6 @@
 package org.mikesajak.raytracer.math
 
+import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -72,10 +73,38 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
   }
 
   "equals" should "return true for identical vectors" in {
-    val v1 = new Vector4(1,2,3,4)
-    val v2 = new Vector4(1,2,3,4)
+    forAll("x", "y", "z", "w") { (x: Float, y: Float, z: Float, w: Float) =>
+      val v1 = new Vector4(x, y, z, w)
+      val v2 = new Vector4(x, y, z, w)
 
-    v1.equals(v2) should equal (true)
+      v1.equals(v2) should equal (true)
+    }
+  }
+
+  "equals_+-" should "return true for identical vectors" in {
+    forAll("x", "y", "z", "w", "epsilon") { (x: Float, y: Float, z: Float, w: Float, epsilon: Float) =>
+      whenever (epsilon > 0) {
+        val v1 = new Vector4(x, y, z, w)
+        val v2 = new Vector4(x, y, z, w)
+
+        v1.equals_+-(v2, epsilon) should equal(true)
+      }
+    }
+  }
+
+  it should "return true for vectors with elements different no more than EPSILON" in {
+    forAll("x", "y", "z", "w", "epsilon") { (x: Float, y: Float, z: Float, w: Float, epsilon: Float) =>
+      whenever(epsilon > 0) {
+        forAll((Gen.choose(-epsilon, epsilon), "diff")) { diff: Float =>
+          whenever(diff > -epsilon && diff < epsilon) {
+            val v1 = new Vector4(x, y, z, w)
+            val v2 = new Vector4(x, y, z, w)
+
+            v1.equals_+-(v2, epsilon) should equal(true)
+          }
+        }
+      }
+    }
   }
 
   it should "return false for difference on x coordinate" in {
@@ -404,8 +433,16 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
   }
 
   it should "scale any generated vector to unit length" in {
-    forAll("x", "y", "z", "w") { (x: Float, y: Float, z: Float, w: Float) =>
-      if ((x < -EPSILON && x > EPSILON) && (y < -EPSILON || y > EPSILON) && (z < -EPSILON || z > EPSILON)) {
+
+    // avoid too large numbers that would cause Float to jump to Infinity
+    val maxValue = math.sqrt(Float.MaxValue/2).toFloat / 10
+    val gen = Gen.choose(-maxValue, maxValue)
+
+    forAll((gen,"x"), (gen,"y"), (gen,"z"), (gen,"w")) { (x: Float, y: Float, z: Float, w: Float) =>
+      whenever ((x.abs > EPSILON && x.abs < maxValue)
+                && (y.abs > EPSILON && y.abs < maxValue)
+                && (z.abs > EPSILON && z.abs < maxValue)
+                && (w.abs > EPSILON && w.abs < maxValue)) {
         val v = Vector4(x, y, z, w)
 
         v.normalize()
