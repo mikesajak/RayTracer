@@ -18,7 +18,8 @@ class TransformTest extends FlatSpec with Matchers with GeneratorDrivenPropertyC
   val ptVecGen = for (x <- Gen.choose(-MaxValue, MaxValue);
                             y <- Gen.choose(-MaxValue, MaxValue);
                             z <- Gen.choose(-MaxValue, MaxValue)) yield Vector4(x, y, z, 1)
-  val angleGen = for (theta <- Gen.choose(0.0f, 360.0f)) yield theta
+  val angleDegGen = for (theta <- Gen.choose(0.0f, 360.0f)) yield theta
+  val angleRadGen = for (theta <- Gen.choose(0.0f, (2 * math.Pi).toFloat)) yield theta
 
   "Translation" should "move point vector by specified amount" in {
     forAll((dirVecGen, "t"), (ptVecGen, "v")) { (t: Vector4, v: Vector4) =>
@@ -66,6 +67,20 @@ class TransformTest extends FlatSpec with Matchers with GeneratorDrivenPropertyC
       withClue(s"result=$v1") {
         dot should equal(1.0f +- EPSILON)
       }
+    }
+  }
+  
+  it should "not change length of rotated vector" in {
+    forAll((dirVecGen, "axis"), (angleDegGen, "angle"), (dirVecGen, "v")) { (axis: Vector4, angle: Float, v: Vector4) =>
+      axis.normalize()
+      val R = Matrix44.rotation(math.toRadians(angle).toFloat, axis)
+
+      val v1 = v * R
+
+      withClue(s"result=$v1") {
+        v1.length should equal (v.length +- EPSILON)
+      }
+      
     }
   }
 
