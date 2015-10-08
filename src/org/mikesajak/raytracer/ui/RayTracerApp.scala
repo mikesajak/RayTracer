@@ -55,6 +55,8 @@ object RayTracerApp extends JFXApp {
       new ExtensionFilter("Test scene definition file (*.test)", "*.test"),
       new ExtensionFilter("All files", "*.*")
     )
+
+    var lastDir: File = _
   }
 
   private val borderStyle = "" +
@@ -266,8 +268,10 @@ object RayTracerApp extends JFXApp {
             accelerator = KeyCombination.keyCombination("Ctrl +O")
             onAction = {
               e: ActionEvent =>
+                fileChooser.initialDirectory = fileChooser.lastDir
                 val file = fileChooser.showOpenDialog(stage)
                 if (file != null) {
+                  fileChooser.lastDir = file.getParentFile
                   try {
                     val (cfg, sc) = ConfigParser.parse(Source.fromFile(file))
                     renderConfig = cfg

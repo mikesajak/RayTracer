@@ -101,7 +101,7 @@ class RayTracer {
   def transform(intersection: Intersection, t: Transform) =
     Intersection(intersection.point * t.matrix, intersection.normal * Matrix44.transpose(t.inverse))
 
-  val EPSILON = 0.0001f
+  val EPSILON = 0.001f
 
   def findColor(intersection: Intersection, cameraRay: Ray, model: Model, scene: Scene): Color4 = {
     val constantColor = model.material.ambient + model.material.emission
