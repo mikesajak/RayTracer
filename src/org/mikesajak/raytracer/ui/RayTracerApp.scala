@@ -91,9 +91,10 @@ object RayTracerApp extends JFXApp {
       synchronized {
         list ::= (x, y, color)
         count += 1
-        if (count > 1000) {
+        if (count > 500) {
           val tmpList = list
           list = List()
+          count = 0
           flush(tmpList)
         }
       }
@@ -105,6 +106,7 @@ object RayTracerApp extends JFXApp {
         synchronized {
           val tmpList = list
           list = List()
+          count = 0
           tmpList
         }
       flush(pixels)
@@ -115,7 +117,7 @@ object RayTracerApp extends JFXApp {
 
       Platform.runLater {
         for ((x, y, color) <- pixels)
-        pixelWriter.setArgb(x, y, color.argb)
+          pixelWriter.setArgb(x, y, color.argb)
       }
     }
   }

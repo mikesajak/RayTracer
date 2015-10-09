@@ -4,16 +4,16 @@ package org.mikesajak.raytracer
  * Created by mike on 30.09.15.
  */
 class Stats {
-  var statsMap = collection.mutable.Map[String, AverageCalc]()
+  private var statsMap = collection.mutable.Map[String, AverageCalc]()
 
-  def accumulate(name: String, value: Long) = {
+  def accumulate(name: String, value: Long) = synchronized {
     val avgCalc = statsMap.getOrElseUpdate(name, new AverageCalc)
     avgCalc.acc(value)
   }
 
-  def get(name: String) = statsMap.get(name)
+  def get(name: String) = synchronized { statsMap.get(name) }
 
-  override def toString = statsMap.toString
+  override def toString = synchronized { statsMap.toString }
 }
 
 class AverageCalc {

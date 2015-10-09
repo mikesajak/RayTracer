@@ -12,12 +12,15 @@ class TransformTest extends FlatSpec with Matchers with GeneratorDrivenPropertyC
 
   val MaxValue = math.sqrt(Float.MaxValue/2).toFloat / 10
 
-  val dirVecGen = for (x <- Gen.choose(-MaxValue, MaxValue);
-                          y <- Gen.choose(-MaxValue, MaxValue);
-                          z <- Gen.choose(-MaxValue, MaxValue)) yield Vector4(x, y, z, 0)
-  val ptVecGen = for (x <- Gen.choose(-MaxValue, MaxValue);
-                            y <- Gen.choose(-MaxValue, MaxValue);
-                            z <- Gen.choose(-MaxValue, MaxValue)) yield Vector4(x, y, z, 1)
+  val dirVecGen = for (x <- Gen.choose(-1/EPSILON, 1/EPSILON);
+                       y <- Gen.choose(-1/EPSILON, 1/EPSILON);
+                       z <- Gen.choose(-1/EPSILON, 1/EPSILON);
+                       v = Vector4(x,y,z,0))
+                       yield v
+  val ptVecGen = for (x <- Gen.choose(-1/EPSILON, 1/EPSILON);
+                      y <- Gen.choose(-1/EPSILON, 1/EPSILON);
+                      z <- Gen.choose(-1/EPSILON, 1/EPSILON);
+                      v = Vector4(x,y,z,1)) yield v
   val angleDegGen = for (theta <- Gen.choose(0.0f, 360.0f)) yield theta
   val angleRadGen = for (theta <- Gen.choose(0.0f, (2 * math.Pi).toFloat)) yield theta
 
@@ -69,7 +72,7 @@ class TransformTest extends FlatSpec with Matchers with GeneratorDrivenPropertyC
       }
     }
   }
-  
+
   it should "not change length of rotated vector" in {
     forAll((dirVecGen, "axis"), (angleDegGen, "angle"), (dirVecGen, "v")) { (axis: Vector4, angle: Float, v: Vector4) =>
       axis.normalize()
@@ -78,9 +81,9 @@ class TransformTest extends FlatSpec with Matchers with GeneratorDrivenPropertyC
       val v1 = v * R
 
       withClue(s"result=$v1") {
-        v1.length should equal (v.length +- EPSILON)
+        v1.length should equal (v.length +- 0.1f)
       }
-      
+
     }
   }
 

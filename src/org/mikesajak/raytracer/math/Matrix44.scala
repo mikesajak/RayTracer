@@ -249,15 +249,19 @@ object Matrix44 {
   def rotation(theta: Float, ax: Float, ay: Float, az: Float): Matrix44 = rotation(theta, Vector4(ax, ay, az))
   def rotation(theta: Float, axis: Vector4) = {
     val cosTheta = math.cos(theta).toFloat
+    val sinTheta = math.sin(theta).toFloat
     val R = Matrix44()
-    R *= cosTheta
-    R += (crossProdMatrix(axis) *= math.sin(theta).toFloat)
-    R += (Matrix44.outerProd(axis, axis) *= (1 - cosTheta))
+//    R *= cosTheta
+    val A = crossProdMatrix(axis)
+    R += A * sinTheta
+    R += A * A * (1 - cosTheta)
+//    R += (crossProdMatrix(axis) *= sinTheta)
+//    R += (Matrix44.outerProd(axis, axis) *= (1 - cosTheta))
     R
   }
 
   def crossProdMatrix(u: Vector4) =
-    Matrix44(   0, -u.x,  u.y,  0,
+    Matrix44(   0, -u.z,  u.y,  0,
               u.z,    0, -u.x,  0,
              -u.y,  u.x,   0,   0,
                 0,    0,   0,   0)
