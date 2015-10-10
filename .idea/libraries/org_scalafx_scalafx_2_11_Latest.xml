@@ -5,11 +5,26 @@
       <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-sources.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/scalafx/scalafx_2.11/8.0.60-R9/scalafx_2.11-8.0.60-R9-sources.jar!/" />
     </SOURCES>
   </library>

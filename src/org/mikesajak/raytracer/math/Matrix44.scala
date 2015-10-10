@@ -226,54 +226,97 @@ object Matrix44 {
     R
   }
 
-  def outerProd(v1: Vector4, v2: Vector4) =
-      Matrix44(v1.x*v2.x, v1.x*v2.y, v1.x*v2.z, v1.x*v2.w,
-               v1.y*v2.x, v1.y*v2.y, v1.y*v2.z, v1.y*v2.w,
-               v1.z*v2.x, v1.z*v2.y, v1.z*v2.z, v1.z*v2.w,
-               v1.w*v2.x, v1.w*v2.y, v1.w*v2.z, v1.w*v2.w)
 
+  // algebraic operations
+
+  /**
+   * Compute outer product (Matrix44) of 2 vectors
+   * @param v1
+   * @param v2
+   * @return Matrix44 representing the outer product
+   */
+  def outerProd(v1: Vector4, v2: Vector4) =
+    Matrix44(v1.x*v2.x, v1.x*v2.y, v1.x*v2.z, v1.x*v2.w,
+      v1.y*v2.x, v1.y*v2.y, v1.y*v2.z, v1.y*v2.w,
+      v1.z*v2.x, v1.z*v2.y, v1.z*v2.z, v1.z*v2.w,
+      v1.w*v2.x, v1.w*v2.y, v1.w*v2.z, v1.w*v2.w)
+
+
+  /**
+   * Compute matrix representing translation
+   * @param t translation offset
+   * @return result matrix
+   */
   def translation(t: Vector4): Matrix44 = translation(t.x, t.y, t.z)
   def translation(tx: Float, ty: Float, tz: Float) =
     Matrix44(1, 0, 0, tx,
-             0, 1, 0, ty,
-             0, 0, 1, tz,
-             0, 0, 0, 1)
+      0, 1, 0, ty,
+      0, 0, 1, tz,
+      0, 0, 0, 1)
 
+  /**
+   * Compute matrix representing scale
+   * @param s scale coefficients (3d)
+   * @return result matrix
+   */
   def scale(s: Vector4): Matrix44 = scale(s.x, s.y, s.z)
   def scale(sx: Float, sy: Float, sz: Float) =
     Matrix44(sx, 0,  0,  0,
-             0, sy,  0,  0,
-             0,  0, sz,  0,
-             0,  0,  0,  1)
+      0, sy,  0,  0,
+      0,  0, sz,  0,
+      0,  0,  0,  1)
 
+  /**
+   * Computer matrix representing rotation by specified angle around specified axis
+   * @param theta angle of rotation
+   * @param ax
+   * @param ay
+   * @param az
+   * @return result matrix
+   */
   def rotation(theta: Float, ax: Float, ay: Float, az: Float): Matrix44 = rotation(theta, Vector4(ax, ay, az))
   def rotation(theta: Float, axis: Vector4) = {
     val cosTheta = math.cos(theta).toFloat
     val sinTheta = math.sin(theta).toFloat
     val R = Matrix44()
-//    R *= cosTheta
+    //    R *= cosTheta
     val A = crossProdMatrix(axis)
     R += A * sinTheta
-    R += A * A * (1 - cosTheta)
-//    R += (crossProdMatrix(axis) *= sinTheta)
-//    R += (Matrix44.outerProd(axis, axis) *= (1 - cosTheta))
+    R += (A * A) * (1 - cosTheta)
+    //    R += (crossProdMatrix(axis) *= sinTheta)
+    //    R += (Matrix44.outerProd(axis, axis) *= (1 - cosTheta))
     R
   }
 
+  /**
+   * Compute matrix representing a cross product operation with specified vector
+   * @param u a vector to cross product
+   * @return result matrix
+   */
   def crossProdMatrix(u: Vector4) =
     Matrix44(   0, -u.z,  u.y,  0,
-              u.z,    0, -u.x,  0,
-             -u.y,  u.x,   0,   0,
-                0,    0,   0,   0)
+      u.z,    0, -u.x,  0,
+      -u.y,  u.x,   0,   0,
+      0,    0,   0,   0)
 
+  /**
+   * Compute matrix representing lookAt transformation
+   * (rotation by angle defined by eye, at and up vectors and translation to the eye position)
+   * @param eye
+   * @param at
+   * @param up
+   * @return result matrix
+   */
   def lookAt(eye: Vector4, at: Vector4, up: Vector4) = {
     val w = (eye - at).normalize()//new Vector4(eye).normalize()
     val u = (up cross w).normalize()
     val v = (w cross u).normalize()
 
     Matrix44(u.x, u.y, u.z, -(eye*u),
-             v.x, v.y, v.z, -(eye*v),
-             w.x, w.y, w.z, -(eye*w),
-               0,   0,   0,        1)
+      v.x, v.y, v.z, -(eye*v),
+      w.x, w.y, w.z, -(eye*w),
+      0,   0,   0,        1)
   }
+
+
 }

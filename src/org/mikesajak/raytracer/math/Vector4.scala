@@ -134,6 +134,7 @@ class Vector4(x0: Float, y0: Float, z0: Float, w0: Float = 0) {
     equals_+-(x, v.x, epsilon) && equals_+-(y, v.y, epsilon) && equals_+-(z, v.z, epsilon) && equals_+-(w, v.w, epsilon)
   }
 
+  def forAll(f: Float => Boolean) = f(x) && f(y) && f(z) && f(w)
 }
 
 object Vector4 {
@@ -154,4 +155,16 @@ object Vector4 {
     val dz = v1.z - v2.z
     scala.math.sqrt(dx * dx + dy * dy + dz * dz).toFloat
   }
+
+
+
+  // general algebraic ops
+
+  /**
+   * Compute orthogonal projection of vector v onto the line spanning of vector s (k*s)
+   * @param v vector to project
+   * @param s vector defining the line
+   * @return coefficient that k*s defines a point(vector) on the line that is orthogonal projection of vector v
+   */
+  def projection(v: Vector4, s: Vector4) = (v * s) / (s * s)
 }

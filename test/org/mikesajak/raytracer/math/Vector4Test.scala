@@ -8,7 +8,20 @@ import org.scalatest.{Matchers, FlatSpec}
  * Created by mike on 03.10.15.
  */
 class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
-  val EPSILON = 0.00001f
+  val Epsilon  = 0.0001f
+//  val MaxValue = math.sqrt(Float.MaxValue/2).toFloat / 10
+  val MaxValue = 1 / Epsilon
+
+  val numGen = Gen.choose(-MaxValue, MaxValue)
+  def dirVecGen: Gen[Vector4] = dirVecGen(-MaxValue, MaxValue)
+
+  def dirVecGen(min: Float, max: Float) =
+    for (x <- Gen.choose(min, max);
+         y <- Gen.choose(min, max);
+         z <- Gen.choose(min, max);
+         v = Vector4(x,y,z,0))
+      yield v
+
 
   "No-arg constructor" should "create vector with zeroes" in {
     val v = new Vector4()
@@ -297,6 +310,16 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
     v2 should equal(Vector4(10, 100, 1000, 10000))
   }
 
+  it should "be independent of order of input vectors" in {
+    forAll((dirVecGen, "v1"), (dirVecGen, "v2")) { (v1: Vector4, v2: Vector4) =>
+
+      val dot1 = v1 dot v2
+      val dot2 = v2 dot v1
+
+      dot1 should equal (dot2)
+    }
+  }
+
   "operator cross" should "produce z unit vector from x and y unit vectors" in {
     val v1 = new Vector4(1,0,0,0)
     val v2 = new Vector4(0,1,0,0)
@@ -372,7 +395,7 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
   "d2 operator" should "compute square length of a vector" in {
     val v1 = new Vector4(1,2,3,4)
 
-    v1.d2 should equal ((1.0f*1 + 2*2 + 3*3) +- EPSILON)
+    v1.d2 should equal ((1.0f*1 + 2*2 + 3*3) +- Epsilon)
   }
 
   it should "not modify the vector" in {
@@ -386,7 +409,7 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
   "d operator" should "compute length of a vector" in {
     val v = new Vector4(1,2,3,4)
 
-    v.d should equal (scala.math.sqrt(1*1 + 2*2 + 3*3).toFloat +- EPSILON)
+    v.d should equal (scala.math.sqrt(1*1 + 2*2 + 3*3).toFloat +- Epsilon)
   }
 
   it should "not modify the vector" in {
@@ -400,7 +423,7 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
   "length operator" should "compute length of a vector" in {
     val v = new Vector4(1,2,3,4)
 
-    v.length should equal (scala.math.sqrt(1*1 + 2*2 + 3*3).toFloat +- EPSILON)
+    v.length should equal (scala.math.sqrt(1*1 + 2*2 + 3*3).toFloat +- Epsilon)
   }
 
   it should "not modify the vector" in {
@@ -416,7 +439,7 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
 
     v.normalize()
 
-    v.length should equal(1.0f +- EPSILON)
+    v.length should equal(1.0f +- Epsilon)
   }
 
   it should "not change direction of a vector" in {
@@ -429,7 +452,7 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
     val d = v1 dot v2
 
     c should equal (Vector4(0,0,0,0))
-    d should equal (v2.length +- EPSILON)
+    d should equal (v2.length +- Epsilon)
   }
 
   it should "scale any generated vector to unit length" in {
@@ -439,16 +462,58 @@ class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChe
     val gen = Gen.choose(-maxValue, maxValue)
 
     forAll((gen,"x"), (gen,"y"), (gen,"z"), (gen,"w")) { (x: Float, y: Float, z: Float, w: Float) =>
-      whenever ((x.abs > EPSILON && x.abs < maxValue)
-                && (y.abs > EPSILON && y.abs < maxValue)
-                && (z.abs > EPSILON && z.abs < maxValue)
-                && (w.abs > EPSILON && w.abs < maxValue)) {
+      whenever ((x.abs > Epsilon && x.abs < maxValue)
+                && (y.abs > Epsilon && y.abs < maxValue)
+                && (z.abs > Epsilon && z.abs < maxValue)
+                && (w.abs > Epsilon && w.abs < maxValue)) {
         val v = Vector4(x, y, z, w)
 
         v.normalize()
 
-        v.length should equal(1.0f +- EPSILON)
+        v.length should equal(1.0f +- Epsilon)
       }
+    }
+  }
+
+  "projection" should "calculate orthogonal projection of vector to a line" in {
+    val phi = 0.1f
+    forAll((dirVecGen(-100, 100), "v"), (dirVecGen(-100, 100), "s")) { (v: Vector4, s: Vector4) =>
+//      forAll((dirVecGen(-100, 100), "s")) { s: Vector4 =>
+        s.normalize()
+        val k = Vector4.projection(v, s)
+        val ks = s * k
+
+        val kv = v - ks
+        val kvLen = kv.length
+
+        val dot1 = (s * v).abs
+        dot1 should equal (ks.length +- Epsilon)
+
+        withClue(s"k=$k, ks=$ks, kv=$kv") {
+
+          forAll(Gen.choose(-1f, -phi)) { l =>
+            val ls = s * (k + l)
+            val lv = v - ls
+
+            withClue(s"l=$l, ls=$ls, lv=$lv") {
+              val lvLen = lv.length
+              lvLen should be > kvLen
+            }
+
+          }
+
+          forAll(Gen.choose(phi, 1f)) { l =>
+            val ls = s * (k + l)
+            val lv = v - ls
+
+            val lvLen = lv.length
+
+            lvLen should be > kvLen
+          }
+
+        }
+
+//      }
     }
   }
 }
