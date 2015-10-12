@@ -28,11 +28,34 @@ shininess 20
 # Though it's probably simpler you just implement this, for later 
 # parts of the assignment.
 
-#translate -1 0 0
+pushTransform
+
+scale 0.8 0.8 0.8
+translate -2 0 0
 
 sphere 0 0 0 1
+
+popTransform
 
 sphere 2 1 2 0.1
 sphere 1 1 1 0.1
 sphere -1.5 0.1 0.7 0.1
 
+vertex -1 -1 0
+vertex +1 -1 0
+vertex +1 +1 0
+vertex -1 +1 0
+
+#tri 0 1 2
+
+#rotate 0 1 0 90
+
+#tri 0 1 2
+
+#rotate 0 1 0 45
+
+#tri 0 1 2
+
+#rotate 0 1 0 30
+
+#tri 0 1 2

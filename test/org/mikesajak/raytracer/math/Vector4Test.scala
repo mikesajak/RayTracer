@@ -3,24 +3,25 @@ package org.mikesajak.raytracer.math
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, FlatSpec}
+import TestUtil._
 
 /**
  * Created by mike on 03.10.15.
  */
 class Vector4Test extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
-  val Epsilon  = 0.0001f
-//  val MaxValue = math.sqrt(Float.MaxValue/2).toFloat / 10
-  val MaxValue = 1 / Epsilon
-
-  val numGen = Gen.choose(-MaxValue, MaxValue)
-  def dirVecGen: Gen[Vector4] = dirVecGen(-MaxValue, MaxValue)
-
-  def dirVecGen(min: Float, max: Float) =
-    for (x <- Gen.choose(min, max);
-         y <- Gen.choose(min, max);
-         z <- Gen.choose(min, max);
-         v = Vector4(x,y,z,0))
-      yield v
+//  val Epsilon  = 0.0001f
+////  val MaxValue = math.sqrt(Float.MaxValue/2).toFloat / 10
+//  val MaxValue = 1 / Epsilon
+//
+//  val numGen = Gen.choose(-MaxValue, MaxValue)
+//  def dirVecGen: Gen[Vector4] = dirVecGen(-MaxValue, MaxValue)
+//
+//  def dirVecGen(min: Float, max: Float) =
+//    for (x <- Gen.choose(min, max);
+//         y <- Gen.choose(min, max);
+//         z <- Gen.choose(min, max);
+//         v = Vector4(x,y,z,0))
+//      yield v
 
 
   "No-arg constructor" should "create vector with zeroes" in {

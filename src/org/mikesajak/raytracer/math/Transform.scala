@@ -13,7 +13,7 @@ case class Transform(matrix: Matrix44, inverse: Matrix44) {
 //  }
 
   def combine(t: Transform) =
-    new Transform(matrix * t.matrix, inverse * t.inverse)
+    new Transform(matrix * t.matrix, t.inverse * inverse)
 
 }
 

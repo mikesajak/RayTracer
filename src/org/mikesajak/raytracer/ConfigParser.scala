@@ -159,8 +159,9 @@ object ConfigParser {
           sceneBuilder.addTransform(Transform.translation(t))
 
         case RotationMatch(ax, ay, az, angle) =>
-          val axis = Vector4(ax.toFloat, ay.toFloat, az.toFloat)
-          sceneBuilder.addTransform(Transform.rotation(angle.toFloat, axis))
+          val axis = Vector4(ax.toFloat, ay.toFloat, az.toFloat).normalize()
+          val theta = scala.math.toRadians(angle.toFloat).toFloat
+          sceneBuilder.addTransform(Transform.rotation(theta, axis))
 
         case ScaleMatch(sx, sy, sz) =>
           val s = Vector4(sx.toFloat, sy.toFloat, sz.toFloat)

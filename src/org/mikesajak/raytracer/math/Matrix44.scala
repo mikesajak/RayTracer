@@ -179,6 +179,28 @@ class Matrix44(a00: Float, a01: Float, a02: Float, a03: Float,
     s"[${at(0,1)}, ${at(1,1)}, ${at(2,1)}, ${at(3,1)}], " +
     s"[${at(0,2)}, ${at(1,2)}, ${at(2,2)}, ${at(3,2)}], " +
     s"[${at(0,3)}, ${at(1,3)}, ${at(2,3)}, ${at(3,3)}]]"
+
+  override def equals(obj: scala.Any) = obj match {
+    case m: Matrix44 =>
+      var i = 0
+      var result = true
+      while (result && i < data.length) {
+        result = data(i) == m.data(i)
+        i += 1
+      }
+      result
+    case _ => false
+  }
+
+  override def hashCode() = {
+    var i = 0
+    var result = 31
+    while (i < data.length) {
+      result = result * 37 + java.lang.Float.floatToIntBits(data(i))
+      i += 1
+    }
+    result
+  }
 }
 
 object Matrix44 {
@@ -237,9 +259,9 @@ object Matrix44 {
    */
   def outerProd(v1: Vector4, v2: Vector4) =
     Matrix44(v1.x*v2.x, v1.x*v2.y, v1.x*v2.z, v1.x*v2.w,
-      v1.y*v2.x, v1.y*v2.y, v1.y*v2.z, v1.y*v2.w,
-      v1.z*v2.x, v1.z*v2.y, v1.z*v2.z, v1.z*v2.w,
-      v1.w*v2.x, v1.w*v2.y, v1.w*v2.z, v1.w*v2.w)
+             v1.y*v2.x, v1.y*v2.y, v1.y*v2.z, v1.y*v2.w,
+             v1.z*v2.x, v1.z*v2.y, v1.z*v2.z, v1.z*v2.w,
+             v1.w*v2.x, v1.w*v2.y, v1.w*v2.z, v1.w*v2.w)
 
 
   /**
@@ -250,9 +272,9 @@ object Matrix44 {
   def translation(t: Vector4): Matrix44 = translation(t.x, t.y, t.z)
   def translation(tx: Float, ty: Float, tz: Float) =
     Matrix44(1, 0, 0, tx,
-      0, 1, 0, ty,
-      0, 0, 1, tz,
-      0, 0, 0, 1)
+             0, 1, 0, ty,
+             0, 0, 1, tz,
+             0, 0, 0, 1)
 
   /**
    * Compute matrix representing scale
@@ -262,9 +284,9 @@ object Matrix44 {
   def scale(s: Vector4): Matrix44 = scale(s.x, s.y, s.z)
   def scale(sx: Float, sy: Float, sz: Float) =
     Matrix44(sx, 0,  0,  0,
-      0, sy,  0,  0,
-      0,  0, sz,  0,
-      0,  0,  0,  1)
+             0, sy,  0,  0,
+             0,  0, sz,  0,
+             0,  0,  0,  1)
 
   /**
    * Computer matrix representing rotation by specified angle around specified axis
@@ -295,9 +317,9 @@ object Matrix44 {
    */
   def crossProdMatrix(u: Vector4) =
     Matrix44(   0, -u.z,  u.y,  0,
-      u.z,    0, -u.x,  0,
-      -u.y,  u.x,   0,   0,
-      0,    0,   0,   0)
+              u.z,    0, -u.x,  0,
+             -u.y,  u.x,    0,  0,
+                0,    0,    0,  0)
 
   /**
    * Compute matrix representing lookAt transformation
@@ -313,9 +335,9 @@ object Matrix44 {
     val v = (w cross u).normalize()
 
     Matrix44(u.x, u.y, u.z, -(eye*u),
-      v.x, v.y, v.z, -(eye*v),
-      w.x, w.y, w.z, -(eye*w),
-      0,   0,   0,        1)
+             v.x, v.y, v.z, -(eye*v),
+             w.x, w.y, w.z, -(eye*w),
+             0,   0,   0,        1)
   }
 
 
