@@ -25,24 +25,13 @@ class RayTracer {
 
     val stats = new Stats
     pixels.par foreach { case pixel@(x,y) =>
-      val startTime = System.nanoTime()
       val ray = mkRay(x,y, config.size._1, config.size._2, scene.camera)
-      val rayTime = System.nanoTime()
-      stats.accumulate("ray", rayTime - startTime)
 
       val intersection = intersect(ray, scene)
-      val intersectionTime = System.nanoTime()
-      stats.accumulate("intersection", intersectionTime - rayTime)
 
       val color = intersection.map{ case (m,i) => findColor(i, ray, m, scene) } getOrElse Color4(0,0,0)
-      val lightingTime = System.nanoTime()
-      stats.accumulate("lighting", lightingTime - intersectionTime)
-      stats.accumulate("ray tracing", lightingTime - startTime)
 
       pixelOutput.setPixel(x, y, color)
-      val pixelTime = System.nanoTime()
-      stats.accumulate("set pixel", pixelTime - lightingTime)
-      stats.accumulate("whole pixel", pixelTime - startTime)
     }
 
     println(s"Statistics: $stats")

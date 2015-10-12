@@ -56,7 +56,7 @@ object RayTracerApp extends JFXApp {
       new ExtensionFilter("All files", "*.*")
     )
 
-    var lastDir: File = _
+    var lastDir: File = new File(System.getProperty("user.dir"))
   }
 
   private val borderStyle = "" +

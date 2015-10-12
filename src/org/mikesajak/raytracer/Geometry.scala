@@ -7,6 +7,56 @@ import org.mikesajak.raytracer.math.{Matrix44, Vector4}
  */
 trait Geometry {
   def intersect(ray: Ray): Option[RayIntersection]
+  def aabb: AABB
+}
+
+case class AABB(min: Vector4, max: Vector4) extends Geometry {
+  def isInside(p: Vector4) = p.x >= min.x && p.x <= max.x &&
+    p.y >= min.y && p.y <= max.y &&
+    p.z >= min.z && p.z <= max.z
+
+  override def aabb = this
+  override def intersect(ray: Ray) = None // FIXME
+
+  /*
+        +------------------+ +-----+
+
+        +--------+
+               +----------+
+
+        +-------------------------+
+            +-----------+
+   */
+
+  def intersect(aabb: AABB): Option[AABB] = {
+//    if (min.x < aabb.min.x && max.x < aabb.min.x) None
+//    else if (aabb.min.x < min.x && aabb.max.x < min.x) None
+    // fixme
+    None
+  }
+}
+
+object AABB {
+  def bound(points: Iterable[Vector4]) = {
+    val min = new Vector4(points.head)
+    val max = new Vector4(points.head)
+
+    points.tail foreach {p =>
+      if (p.x < min.x) min.x = p.x
+      if (p.y < min.y) min.y = p.y
+      if (p.z < min.z) min.z = p.z
+
+      if (p.x > max.x) max.x = p.x
+      if (p.y > max.y) max.y = p.y
+      if (p.z > max.z) max.z = p.z
+    }
+
+    AABB(min, max)
+  }
+
+  def merge(aabb1: AABB, aabb2: AABB) =
+    AABB(Vector4(aabb1.min.x min aabb2.min.x, aabb1.min.y min aabb2.min.y, aabb1.min.z min aabb2.min.z),
+         Vector4(aabb1.max.x max aabb2.max.x, aabb1.max.y max aabb2.max.y, aabb1.max.z max aabb2.max.z))
 }
 
 case class Sphere(center: Vector4, radius: Float) extends Geometry {
@@ -77,9 +127,22 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
       else None
     }
   }
+
+  override def aabb = {
+    val r = Vector4(radius, radius, radius, 0)
+    AABB(center - r, center + r)
+  }
 }
 
 case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
+
+  def apply(i: Int) = i match {
+    case 0 => p1
+    case 1 => p2
+    case 2 => p3
+    case _ => throw new IndexOutOfBoundsException(s"Triangle point index out of bounds: $i")
+  }
+
   def normal = {
     //((p2 - p1) cross (p3 - p1)).normalize()
     val n = p2 - p1
@@ -136,20 +199,26 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
     }
   }
 
-}
-
-
-
-case class IndexedTriangle(vertices: Seq[Vector4], i1: Int, i2: Int, i3: Int) extends Geometry {
-  def p1 = vertices(i1)
-  def p2 = vertices(i2)
-  def p3 = vertices(i3)
-
-  def normal = ((p2 - p1) cross (p3 - p1)).normalize()
-  override def intersect(ray: Ray): Option[RayIntersection] = {
-    None
+  override def aabb = {
+    val min = Vector4(p1.x min p2.x min p3.x, p1.y min p2.y min p3.y, p1.z min p2.z min p3.z, 0)
+    val max = Vector4(p1.x max p2.x max p3.x, p1.y max p2.y max p3.y, p1.z max p2.z max p3.z, 0)
+    AABB(min, max)
   }
+
 }
+
+
+
+//case class IndexedTriangle(vertices: Seq[Vector4], i1: Int, i2: Int, i3: Int) extends Geometry {
+//  def p1 = vertices(i1)
+//  def p2 = vertices(i2)
+//  def p3 = vertices(i3)
+//
+//  def normal = ((p2 - p1) cross (p3 - p1)).normalize()
+//  override def intersect(ray: Ray): Option[RayIntersection] = {
+//    None
+//  }
+//}
 
 case class Mesh(triangles: Seq[Triangle]) extends Geometry {
   override def intersect(ray: Ray) = {
@@ -164,6 +233,8 @@ case class Mesh(triangles: Seq[Triangle]) extends Geometry {
     }
     else None
   }
+
+  override def aabb = AABB.bound(triangles.flatMap(t => Iterable.tabulate(3)(i => t(i))))
 }
 
 
@@ -182,7 +253,7 @@ case class Ray(origin: Vector4, dir: Vector4) {
   def transform(m: Matrix44) = {
     origin *= m
     dir *= m
-//    dir.normalize()
+    dir.normalize()
     this
   }
 }
