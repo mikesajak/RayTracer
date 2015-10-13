@@ -10,16 +10,22 @@ trait Geometry {
   def aabb: AABB
 }
 
-case class AABB(min: Vector4, max: Vector4) extends Geometry {
-  def isInside(p: Vector4) = p.x >= min.x && p.x <= max.x &&
-    p.y >= min.y && p.y <= max.y &&
-    p.z >= min.z && p.z <= max.z
+class AABB(min0: Vector4, max0: Vector4) extends Geometry {
+  val min = Vector4(min0.x min max0.x, min0.y min max0.y, min0.z min max0.z, 1)
+  val max = Vector4(min0.x max max0.x, min0.y max max0.y, min0.z max max0.z, 1)
 
-  override def aabb = this
+  def this(aabb: AABB) = this(new Vector4(aabb.min), new Vector4(aabb.max))
+
+  def isInside(p: Vector4) = gte(p, min) && lte(p, max)
+
+  override def aabb = new AABB(this)
   override def intersect(ray: Ray) = None // FIXME
 
   /*
         +------------------+ +-----+
+
+            +------------+
+        +---------+
 
         +--------+
                +----------+
@@ -29,11 +35,26 @@ case class AABB(min: Vector4, max: Vector4) extends Geometry {
    */
 
   def intersect(aabb: AABB): Option[AABB] = {
-//    if (min.x < aabb.min.x && max.x < aabb.min.x) None
-//    else if (aabb.min.x < min.x && aabb.max.x < min.x) None
-    // fixme
-    None
+    if (isInside(aabb.min)) {
+      if (isInside(aabb.max)) Some(new AABB(aabb))
+      else Some(new AABB(new Vector4(aabb.min), new Vector4(max)))
+    } else if (isInside(aabb.max)) {
+      Some(new AABB(new Vector4(min), new Vector4(aabb.max)))
+    } else if (aabb.isInside(min)) {
+      if (aabb.isInside(max)) Some(new AABB(this))
+      else Some(new AABB(new Vector4(min), new Vector4(aabb.max)))
+    } else if (aabb.isInside(max)) {
+      Some(new AABB(new Vector4(aabb.min), new Vector4(max)))
+    }
+    else None
   }
+
+  private def gt(v1: Vector4, v2: Vector4) = v1.x > v2.x && v1.y > v2.y && v1.z > v2.z
+  private def gte(v1: Vector4, v2: Vector4) = v1.x >= v2.x && v1.y >= v2.y && v1.z >= v2.z
+
+  private def lt(v1: Vector4, v2: Vector4) = v1.x < v2.x && v1.y < v2.y && v1.z < v2.z
+  private def lte(v1: Vector4, v2: Vector4) = v1.x <= v2.x && v1.y <= v2.y && v1.z <= v2.z
+
 }
 
 object AABB {
@@ -51,12 +72,12 @@ object AABB {
       if (p.z > max.z) max.z = p.z
     }
 
-    AABB(min, max)
+    new AABB(min, max)
   }
 
   def merge(aabb1: AABB, aabb2: AABB) =
-    AABB(Vector4(aabb1.min.x min aabb2.min.x, aabb1.min.y min aabb2.min.y, aabb1.min.z min aabb2.min.z),
-         Vector4(aabb1.max.x max aabb2.max.x, aabb1.max.y max aabb2.max.y, aabb1.max.z max aabb2.max.z))
+    new AABB(Vector4(aabb1.min.x min aabb2.min.x, aabb1.min.y min aabb2.min.y, aabb1.min.z min aabb2.min.z),
+             Vector4(aabb1.max.x max aabb2.max.x, aabb1.max.y max aabb2.max.y, aabb1.max.z max aabb2.max.z))
 }
 
 case class Sphere(center: Vector4, radius: Float) extends Geometry {
@@ -130,7 +151,7 @@ case class Sphere(center: Vector4, radius: Float) extends Geometry {
 
   override def aabb = {
     val r = Vector4(radius, radius, radius, 0)
-    AABB(center - r, center + r)
+    new AABB(center - r, center + r)
   }
 }
 
@@ -200,9 +221,9 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
   }
 
   override def aabb = {
-    val min = Vector4(p1.x min p2.x min p3.x, p1.y min p2.y min p3.y, p1.z min p2.z min p3.z, 0)
-    val max = Vector4(p1.x max p2.x max p3.x, p1.y max p2.y max p3.y, p1.z max p2.z max p3.z, 0)
-    AABB(min, max)
+    val min = Vector4(p1.x min p2.x min p3.x, p1.y min p2.y min p3.y, p1.z min p2.z min p3.z, 1)
+    val max = Vector4(p1.x max p2.x max p3.x, p1.y max p2.y max p3.y, p1.z max p2.z max p3.z, 1)
+    new AABB(min, max)
   }
 
 }
