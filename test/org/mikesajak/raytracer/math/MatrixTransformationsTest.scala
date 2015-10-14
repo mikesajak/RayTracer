@@ -141,22 +141,6 @@ class MatrixTransformationsTest extends FlatSpec with Matchers with GeneratorDri
     }
   }
 
-//  it should "produce vector perpendicular to axis of rotation for any rotation by any axis" in {
-//    forAll((angleGen, "angle"), (dirVecGen, "axis"), (dirVecGen, "v")) { (angle: Float, axis: Vector4, v: Vector4) =>
-//      axis.normalize()
-//      v.normalize()
-//      val R = Matrix44.rotation(math.toRadians(angle).toFloat, axis)
-//
-//      val v1 = v * R
-//
-//      val dot = axis * v1
-//      dot should equal (0.0f +- EPSILON)
-//
-//      val cross = axis cross v1
-//      cross.length should equal(1.0f +- EPSILON)
-//    }
-//  }
-
   // todo: more rotation tests
 
   "Scale" should "scale dir vector by specified amounts" in {
@@ -175,7 +159,6 @@ class MatrixTransformationsTest extends FlatSpec with Matchers with GeneratorDri
 
       val v1 = v * S
 
-//      v1 should equal(Vector4(v.x * s.x, v.y * s.y, v.z * s.z, 1) +- EPSILON)
       v1 should equal(Vector4(v.x * s.x, v.y * s.y, v.z * s.z, 1) +- PRECISION)
     }
   }

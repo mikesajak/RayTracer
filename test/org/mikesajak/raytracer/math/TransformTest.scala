@@ -1,9 +1,8 @@
 package org.mikesajak.raytracer.math
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.mikesajak.raytracer.math.TestUtil._
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
-
-import TestUtil._
+import org.scalatest.{FlatSpec, Matchers}
 /**
  * Created by mike on 11.10.15.
  */
@@ -28,5 +27,4 @@ class TransformTest extends FlatSpec with Matchers with GeneratorDrivenPropertyC
         M should equal(Matrix44.identity())
     }
   }
-
 }

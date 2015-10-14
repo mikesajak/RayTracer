@@ -6,6 +6,8 @@ package org.mikesajak.raytracer.math
 case class Transform(matrix: Matrix44, inverse: Matrix44) {
   def this(t: Transform) = this(new Matrix44(t.matrix), new Matrix44(t.inverse))
 
+  def this() = this(Matrix44.identity(), Matrix44.identity())
+
 //  def :=(t: Transform) = {
 //    matrix := t.matrix
 //    inverse := t.inverse
