@@ -171,7 +171,7 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
     n.normalize()
   }
 
-  val EPSILON = 0.00001f
+  val Epsilon = 0.00001f
 
   override def intersect(ray: Ray): Option[RayIntersection] = {
     // Moller-Trumbore algorithm
@@ -187,7 +187,7 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
     val det = e1 * p
 
     // not culling
-    if (det > -EPSILON && det < EPSILON) None // the intersection lies outside of the triangle
+    if (det > -Epsilon && det < Epsilon) None // the intersection lies outside of the triangle
     else {
       val invDet = 1.0f / det
 
@@ -212,7 +212,7 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
         else {
           val tRay = e2 * q * invDet
 
-          if (tRay > EPSILON) // ray intersection
+          if (tRay > Epsilon) // ray intersection
             Some(new RayIntersection(ray, tRay, normal))
           else None
         }
@@ -226,6 +226,22 @@ case class Triangle(p1: Vector4, p2: Vector4, p3: Vector4) extends Geometry {
     new AABB(min, max)
   }
 
+}
+
+class Plane(point: Vector4, normal: Vector4) extends Geometry {
+  override def aabb = new AABB(Vector4(Float.MinValue, Float.MinValue, Float.MinValue, 1),
+                               Vector4(Float.MaxValue, Float.MaxValue, Float.MaxValue, 1))
+
+  val Epsilon = 0.00001f
+
+  override def intersect(ray: Ray) = {
+    if (ray.dir * normal == Epsilon) None
+    else {
+      val p = point - ray.origin
+      val t = (p * normal) / (ray.dir * normal)
+      Some(new RayIntersection(ray, t, new Vector4(normal)))
+    }
+  }
 }
 
 
